@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+template<typename T>
 class Matrix
 {
 public:
@@ -10,7 +11,7 @@ public:
 
     Matrix(): rows(1), columns(1)
     {
-        data_ = new float[rows*columns];
+        data_ = new T[rows*columns];
         for(int i = 0; i < rows; ++i)
         {
             for(int j = 0; j < columns; ++j)
@@ -20,7 +21,7 @@ public:
 
     Matrix(int rows_, int columns_): rows(rows_), columns(columns_)
     {
-        data_ = new float[rows*columns];
+        data_ = new T[rows*columns];
         for(int i = 0; i < rows; ++i)
         {
             for(int j = 0; j < columns; ++j)
@@ -28,10 +29,10 @@ public:
         }
     }
 
-    Matrix(const float* data, int rows_, int columns_): rows(rows_), columns(columns_)
+    Matrix(const T* data, int rows_, int columns_): rows(rows_), columns(columns_)
     {
         int k = 0;
-        data_ = new float[rows*columns];
+        data_ = new T[rows*columns];
         for(int i = 0; i < rows; ++i)
         {
             for(int j = 0; j < columns; ++j)
@@ -43,7 +44,7 @@ public:
 
     Matrix(const Matrix& o): rows(o.rows), columns(o.columns)
     {
-        data_ = new float[rows*columns];
+        data_ = new T[rows*columns];
         for(int i = 0; i < rows; ++i)
         {
             for(int j = 0; j < columns; ++j)
@@ -57,7 +58,7 @@ public:
     }
 
 
-    float get(int i, int j) const
+    T get(int i, int j) const
     {
         if(i < 0 || i >= rows || j < 0 || j >= columns)
         {
@@ -108,7 +109,7 @@ public:
 
         rows = o.rows;
         columns = o.columns;
-        data_ = new float[rows*columns];
+        data_ = new T[rows*columns];
         for(int i = 0; i < rows; ++i)
         {
             for(int j = 0; j < columns; ++j)
@@ -188,7 +189,7 @@ public:
         return *this;
     }
 
-    Matrix operator*(float f) const
+    Matrix operator*(T f) const
     {
         Matrix result(rows, columns);
         for(int i = 0; i < rows; ++i)
@@ -201,7 +202,7 @@ public:
         return result;
     }
 
-    Matrix& operator*=(float f)
+    Matrix& operator*=(T f)
     {
         for(int i = 0; i < rows; ++i)
         {
@@ -221,7 +222,7 @@ public:
             return *this;
         }
         Matrix result(rows, o.columns);
-        float s;
+        T s;
         for(int i = 0; i < rows; ++i)
         {
             for(int j = 0; j < o.columns; ++j)
@@ -237,7 +238,7 @@ public:
         return result;
     }
 
-    friend Matrix operator*(float f, const Matrix& m)
+    friend Matrix operator*(T f, const Matrix& m)
     {
         return m*f;
     }
@@ -257,7 +258,7 @@ public:
         return os;
     }
 private:
-    float *data_;
+    T *data_;
 
     int at(int i, int j) const
     {
