@@ -85,6 +85,23 @@ public:
         }
     }
 
+    /*
+    void randomize()
+    {
+        unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+        std::mt19937 generator(seed);
+        std::uniform_real_distribution<T> distribution(-1.0, 1.0);
+
+        for(int i = 0; i < rows; ++i)
+        {
+            for(int j = 0; j < columns; ++j)
+            {
+                data_[at(i, j)] = distribution(generator);
+            }
+        }
+    }
+    */
+
     Matrix map(T (*f)(T))
     {
         Matrix result(rows_, columns_);
