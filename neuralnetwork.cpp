@@ -13,13 +13,10 @@ NeuralNetwork::NeuralNetwork(int input_nodes, int hidden_nodes, int output_nodes
     bias_o = MatrixType(output_nodes, 1);
 
     float r = 4.0*std::sqrt(6.0/(input_nodes + hidden_nodes));
-    //weights_ih.randomize();
-    //weights_ih.map(random);
-    weights_ih *= r;
+    weights_ih.randomize(-r, r);
 
-    //weights_ho.randomize();
     r = 4.0*std::sqrt(6.0/(hidden_nodes + output_nodes));
-    weights_ho *= r;
+    weights_ho.randomize(-r, r);
 
     bias_h.zero();
     bias_o.zero();

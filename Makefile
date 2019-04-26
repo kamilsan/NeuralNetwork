@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-O3 -Wall -pedantic
+CFLAGS= -std=c++17 -O3 -Wall -pedantic
 
 program: main.o neuralnetwork.o
 	${CC} ${CFLAGS} main.o -o program
