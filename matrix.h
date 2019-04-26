@@ -74,6 +74,43 @@ public:
         return data_[at(i, j)];
     }
 
+    void zero()
+    {
+        for(int i = 0; i < rows_; ++i)
+        {
+            for(int j = 0; j < columns_; ++j)
+            {
+                data_[at(i, j)] = 0;
+            }
+        }
+    }
+
+    Matrix map(T (*f)(T))
+    {
+        Matrix result(rows_, columns_);
+        for(int i = 0; i < rows_; ++i)
+        {
+            for(int j = 0; j < columns_; ++j)
+            {
+                result.data_[at(i, j)] = f(data_[at(i, j)]);
+            }
+        }
+        return result;
+    }
+
+    float sum() const
+    {
+        float sum = 0;
+        for(int i = 0; i < rows_; ++i)
+        {
+            for(int j = 0; j < columns_; ++j)
+            {
+                sum += data_[at(i, j)];
+            }
+        }
+        return sum;
+    }
+
     Matrix hadamard(const Matrix& o)
     {
         if(o.rows_ != rows_ || o.columns_ != columns_)
