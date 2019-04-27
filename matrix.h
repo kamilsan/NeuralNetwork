@@ -22,7 +22,7 @@ public:
         }
     }
 
-    Matrix(): Matrix(1, 1) {}
+    explicit Matrix(): Matrix(1, 1) {}
 
     Matrix(const T* data, int rows, int columns): rows_(rows), columns_(columns)
     {

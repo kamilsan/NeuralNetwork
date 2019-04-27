@@ -4,26 +4,27 @@
 #include <vector>
 #include <memory>
 #include <random>
+
 #include "matrix.h"
 
-typedef Matrix<float> MatrixType;
+typedef Matrix<float> NNMatrixType;
 
 class NeuralNetwork
 {
 public:
     NeuralNetwork(int input_nodes, int hidden_nodes, int output_nodes, float learningRate);
 
-    void feedforward(const MatrixType& input, MatrixType &result) const;
+    void feedforward(const NNMatrixType& input, NNMatrixType &result) const;
     void train(int epochs, 
                 int batchSize, 
-                const std::vector<std::shared_ptr<MatrixType>>& inputs, 
-                const std::vector<std::shared_ptr<MatrixType>>& targets);
+                const std::vector<std::shared_ptr<NNMatrixType>>& inputs, 
+                const std::vector<std::shared_ptr<NNMatrixType>>& targets);
 
 private:
     int input_nodes_, hidden_nodes_, output_nodes_;
     float learningRate;
-    MatrixType weights_ih, weights_ho;
-    MatrixType bias_h, bias_o;
+    NNMatrixType weights_ih, weights_ho;
+    NNMatrixType bias_h, bias_o;
 
     static float sigmoid(float x)
     {
