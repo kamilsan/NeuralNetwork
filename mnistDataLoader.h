@@ -1,20 +1,26 @@
 #pragma once
 
 #include <exception>
+#include <sstream>
 
 #include "mnistData.h"
 
 class data_load_failure : public std::exception
 {
 public:
-    data_load_failure(const char* filename): filename_(filename) {}
+    data_load_failure(const char* filename)
+    {
+        std::stringstream ss;
+        ss << "Could not load data from file named " << filename << "!";
+        message_ = ss.str();
+    }
 
     const char* what() const throw()
     {
-    	return (std::string("Could not load data from file named: ") + filename_).c_str();
+    	return message_.c_str();
     }
 private:
-    std::string filename_;
+    std::string message_;
 };
 
 class MNISTDataLoader
