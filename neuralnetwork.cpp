@@ -123,3 +123,45 @@ void NeuralNetwork::train(int epochs,
         }
     }
 }
+
+float NeuralNetwork::test(const std::vector<std::shared_ptr<NNMatrixType>>& inputs, 
+                          const std::vector<std::shared_ptr<NNMatrixType>>& targets) const
+{
+    NNMatrixType result;
+    unsigned correctPredictions = 0;
+    unsigned predictions = inputs.size();
+    for(size_t n = 0; n < predictions; ++n)
+    {
+        feedforward(*inputs[n], result);
+
+        int predictedLabel = 0;
+        float currentValue = result.get(0, 0);
+        float maxValue = currentValue;
+        for(int i = 0; i < result.getRows(); ++i)
+        {
+            currentValue = result.get(i, 0);
+            if(currentValue > maxValue)
+            {
+                predictedLabel = i;
+                maxValue = currentValue;
+            }
+        }
+
+        int expectedLabel = 0;
+        currentValue = targets[n]->get(0, 0);
+        maxValue = currentValue;
+        for(int i = 0; i < result.getRows(); ++i)
+        {
+            currentValue = targets[n]->get(i, 0);
+            if(currentValue > maxValue)
+            {
+                expectedLabel = i;
+                maxValue = currentValue;
+            }
+        }
+
+        if(expectedLabel == predictedLabel) correctPredictions++;
+    }
+
+    return 100.0f*correctPredictions/predictions;
+}

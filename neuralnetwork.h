@@ -19,6 +19,8 @@ public:
                 int batchSize, 
                 const std::vector<std::shared_ptr<NNMatrixType>>& inputs, 
                 const std::vector<std::shared_ptr<NNMatrixType>>& targets);
+    float test(const std::vector<std::shared_ptr<NNMatrixType>>& inputs, 
+               const std::vector<std::shared_ptr<NNMatrixType>>& targets) const;
 
 private:
     int input_nodes_, hidden_nodes_, output_nodes_;
