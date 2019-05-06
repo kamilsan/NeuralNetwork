@@ -14,7 +14,8 @@ int MNISTDataLoader::reverseInt(int number)
     return ((int)c1 << 24) + ((int)c2 << 16) + ((int)c3 << 8) + c4;
 }
 
-MNISTData MNISTDataLoader::loadData(const char* trainingImagesFilename,
+void MNISTDataLoader::loadData(MNISTData& data,
+                       const char* trainingImagesFilename,
                        const char* trainingLabelsFilename,
                        const char* testingImagesFilename,
                        const char* testingLabelsFilename)
@@ -39,8 +40,21 @@ MNISTData MNISTDataLoader::loadData(const char* trainingImagesFilename,
                                 imagePixels, trainingDataMatrix, trainingLabelsMatrix);
     createMatriciesFromRawData(testingImages, testingLabels, nLoadedTestingImages, 
                                 imagePixels, testingDataMatrix, testingLabelsMatrix);
+
+    for(auto &trainingImage : trainingImages)
+    {
+        delete[] trainingImage;
+    }
+
+    for(auto &testingImage : testingImages)
+    {
+        delete[] testingImage;
+    }
+
+    delete[] trainingLabels;
+    delete[] testingLabels;
     
-    return MNISTData(trainingDataMatrix, trainingLabelsMatrix, testingDataMatrix, testingLabelsMatrix);
+    data = MNISTData(trainingDataMatrix, trainingLabelsMatrix, testingDataMatrix, testingLabelsMatrix);
 }
 
 void MNISTDataLoader::loadImages(const char* imagesFilename, 
@@ -126,7 +140,7 @@ void MNISTDataLoader::createMatriciesFromRawData(const std::vector<char*> &image
         {
             imageMatrixData[j] = (unsigned char)(images[i][j])/255.0f;
         }
-        imagesMatricies[i] = std::shared_ptr<NNMatrixType>(new NNMatrixType(imageMatrixData, imagePixels, 1));
+        imagesMatricies.push_back(std::shared_ptr<NNMatrixType>(new NNMatrixType(imageMatrixData, imagePixels, 1)));
         
         int label = +labels[i];
         for(int n = 0; n < POSSIBLE_LABELS; ++n)
@@ -134,7 +148,7 @@ void MNISTDataLoader::createMatriciesFromRawData(const std::vector<char*> &image
             if(n != label) labelMatrixData[n] = 0.0f;
             else labelMatrixData[n] = 1.0f;
         }
-        lablesMatricies[i] = std::make_shared<NNMatrixType>(labelMatrixData, POSSIBLE_LABELS, 1);
+        lablesMatricies.push_back(std::make_shared<NNMatrixType>(labelMatrixData, POSSIBLE_LABELS, 1));
     }
 
     delete[] imageMatrixData;

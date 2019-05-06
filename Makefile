@@ -2,7 +2,7 @@ CC=g++
 CFLAGS= -std=c++17 -O3 -Wall -pedantic
 
 program: main.o neuralnetwork.o mnistDataLoader.o
-	${CC} ${CFLAGS} main.o -o program
+	${CC} ${CFLAGS} main.o neuralnetwork.o mnistDataLoader.o -o program
 
 main.o: main.cpp
 	${CC} ${CFLAGS} -c main.cpp -o main.o

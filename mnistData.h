@@ -7,10 +7,13 @@ class MNISTData
 {
 typedef std::vector<std::shared_ptr<NNMatrixType>> MatrixVec;
 public:
+    MNISTData() = default;
+
     MNISTData(const MatrixVec& trainingData, const MatrixVec& trainingLabels,
               const MatrixVec& testingData, const MatrixVec& testingLabels):
               trainingData_(trainingData), trainingLabels_(trainingLabels),
-              testingData_(testingData), testingLabels_(testingLabels) {}
+              testingData_(testingData), testingLabels_(testingLabels) 
+    {}
 
     MatrixVec const& getTrainingData() const
     {
