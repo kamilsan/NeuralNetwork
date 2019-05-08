@@ -21,7 +21,8 @@ public:
                 const std::vector<std::shared_ptr<NNMatrixType>>& targets);
     float test(const std::vector<std::shared_ptr<NNMatrixType>>& inputs, 
                const std::vector<std::shared_ptr<NNMatrixType>>& targets) const;
-
+    void save(const char* filename) const;
+    static NeuralNetwork* load(const char* filename);
 private:
     int input_nodes_, hidden_nodes_, output_nodes_;
     float learningRate;

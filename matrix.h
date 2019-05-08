@@ -87,7 +87,6 @@ public:
             {
                 for(int j = 0; j < columns_; ++j)
                 {
-                    std::cout << "i: " << i << " j: " << j << "\n";
                     data_[at(i, j)] = distribution(generator_);
                 }
             }
@@ -323,7 +322,7 @@ private:
     int rows_;
     int columns_;
     std::mt19937 generator_;
-    T *data_;
+    T* data_;
 
     int at(int i, int j) const
     {

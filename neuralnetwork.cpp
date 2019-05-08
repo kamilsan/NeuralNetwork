@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <memory>
 #include <algorithm>
 #include <chrono>
@@ -164,4 +165,15 @@ float NeuralNetwork::test(const std::vector<std::shared_ptr<NNMatrixType>>& inpu
     }
 
     return 100.0f*correctPredictions/predictions;
+}
+
+void NeuralNetwork::save(const char* filename) const
+{
+    std::cout << "Not Implemented!\n";
+}
+
+NeuralNetwork* NeuralNetwork::load(const char* filename)
+{
+    std::cout << "Not Implemented!\n";
+    return nullptr;
 }
