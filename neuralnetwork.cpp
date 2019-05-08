@@ -7,10 +7,10 @@
 
 NeuralNetwork::NeuralNetwork(int input_nodes, int hidden_nodes, int output_nodes, float learningRate): input_nodes_(input_nodes), hidden_nodes_(hidden_nodes), output_nodes_(output_nodes), learningRate(learningRate)
 {
-    weights_ih = MatrixType(hidden_nodes, input_nodes);
-    weights_ho = MatrixType(output_nodes, hidden_nodes);
-    bias_h = MatrixType(hidden_nodes, 1);
-    bias_o = MatrixType(output_nodes, 1);
+    weights_ih = NNMatrixType(hidden_nodes, input_nodes);
+    weights_ho = NNMatrixType(output_nodes, hidden_nodes);
+    bias_h = NNMatrixType(hidden_nodes, 1);
+    bias_o = NNMatrixType(output_nodes, 1);
 
     float r = 4.0*std::sqrt(6.0/(input_nodes + hidden_nodes));
     weights_ih.randomize(-r, r);
@@ -22,7 +22,7 @@ NeuralNetwork::NeuralNetwork(int input_nodes, int hidden_nodes, int output_nodes
     bias_o.zero();
 }
 
-void NeuralNetwork::feedforward(const MatrixType& input, MatrixType &result) const
+void NeuralNetwork::feedforward(const NNMatrixType& input, NNMatrixType &result) const
 {
     if(input.getRows() != input_nodes_ || input.getColumns() != 1)
     {
@@ -41,8 +41,8 @@ void NeuralNetwork::feedforward(const MatrixType& input, MatrixType &result) con
 
 void NeuralNetwork::train(int epochs, 
                           int batchSize, 
-                          const std::vector<std::shared_ptr<MatrixType>>& inputs, 
-                          const std::vector<std::shared_ptr<MatrixType>>& targets)
+                          const std::vector<std::shared_ptr<NNMatrixType>>& inputs, 
+                          const std::vector<std::shared_ptr<NNMatrixType>>& targets)
 {
     int trainingSize = inputs.size();
     std::vector<int> permutaionTable(trainingSize);
@@ -56,13 +56,13 @@ void NeuralNetwork::train(int epochs,
 
     int numBatches = std::ceil((float)trainingSize / batchSize);
 
-    MatrixType input;
-    MatrixType target;
+    NNMatrixType input;
+    NNMatrixType target;
 
-    MatrixType bh_grad(hidden_nodes_, 1);
-    MatrixType bo_grad(output_nodes_, 1);
-    MatrixType wih_grad(hidden_nodes_, input_nodes_);
-    MatrixType who_grad(output_nodes_, hidden_nodes_);
+    NNMatrixType bh_grad(hidden_nodes_, 1);
+    NNMatrixType bo_grad(output_nodes_, 1);
+    NNMatrixType wih_grad(hidden_nodes_, input_nodes_);
+    NNMatrixType who_grad(output_nodes_, hidden_nodes_);
 
     for(int epoch = 0; epoch < epochs; ++epoch)
     {
@@ -91,29 +91,29 @@ void NeuralNetwork::train(int epochs,
                 return;
             }
 
-            MatrixType hidden_unactive = weights_ih*input + bias_h;
-            MatrixType hidden = hidden_unactive.map(relu);
-            MatrixType output_unactive = weights_ho*hidden + bias_o;
+            NNMatrixType hidden_unactive = weights_ih*input + bias_h;
+            NNMatrixType hidden = hidden_unactive.map(relu);
+            NNMatrixType output_unactive = weights_ho*hidden + bias_o;
 
             //Softmax
-            MatrixType output = output_unactive.map(std::exp);
+            NNMatrixType output = output_unactive.map(std::exp);
             float den = 1.0/output.sum();
             output *= den;
 
-            MatrixType difference = target - output;
+            NNMatrixType difference = target - output;
             //softmax + negative log-likelihood
-            MatrixType deltaOutput = difference;
+            NNMatrixType deltaOutput = difference;
 
             bo_grad += deltaOutput;
-            who_grad += deltaOutput * MatrixType::transpose(hidden);
+            who_grad += deltaOutput * NNMatrixType::transpose(hidden);
 
-            MatrixType error_hidden = MatrixType::transpose(weights_ho) * deltaOutput;
-            MatrixType gradActivation_hidden = hidden_unactive.map(drelu);
+            NNMatrixType error_hidden = NNMatrixType::transpose(weights_ho) * deltaOutput;
+            NNMatrixType gradActivation_hidden = hidden_unactive.map(drelu);
 
-            MatrixType deltaHidden = error_hidden.hadamard(gradActivation_hidden);
+            NNMatrixType deltaHidden = error_hidden.hadamard(gradActivation_hidden);
             
             bh_grad += deltaHidden;
-            wih_grad += deltaHidden * MatrixType::transpose(input);
+            wih_grad += deltaHidden * NNMatrixType::transpose(input);
         }
 
         bias_o += learningRate * bo_grad;
