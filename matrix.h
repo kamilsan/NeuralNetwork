@@ -14,11 +14,12 @@ public:
         unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
         generator_ = std::mt19937(seed);
 
-        data_ = new T[rows_*columns_];
-        for(int i = 0; i < rows; ++i)
+        len_ = rows*columns;
+        data_ = new T[len_];
+
+        for(int i = 0; i < len_; ++i)
         {
-            for(int j = 0; j < columns_; ++j)
-                data_[at(i, j)] = 1;
+            data_[i] = 1;
         }
     }
 
@@ -29,14 +30,11 @@ public:
         unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
         generator_ = std::mt19937(seed);
 
-        int k = 0;
-        data_ = new T[rows_*columns_];
-        for(int i = 0; i < rows_; ++i)
+        len_ = rows*columns;
+        data_ = new T[len_];
+        for(int i = 0; i < len_; ++i)
         {
-            for(int j = 0; j < columns_; ++j)
-            {
-                data_[at(i, j)] = data[k++];
-            }
+            data_[i] = data[i];
         }
     }
 
@@ -74,12 +72,9 @@ public:
 
     void zero()
     {
-        for(int i = 0; i < rows_; ++i)
+        for(int i = 0; i < len_; ++i)
         {
-            for(int j = 0; j < columns_; ++j)
-            {
-                data_[at(i, j)] = 0;
-            }
+            data_[i] = 0;
         }
     }
 
@@ -88,23 +83,17 @@ public:
         if constexpr(std::is_integral<T>::value)
         {
             std::uniform_int_distribution<T> distribution(min, max);
-            for(int i = 0; i < rows_; ++i)
+            for(int i = 0; i < len_; ++i)
             {
-                for(int j = 0; j < columns_; ++j)
-                {
-                    data_[at(i, j)] = distribution(generator_);
-                }
+                data_[i] = distribution(generator_);
             }
         }
         else if constexpr(std::is_floating_point<T>::value)
         {
             std::uniform_real_distribution<T> distribution(min, max);
-            for(int i = 0; i < rows_; ++i)
+            for(int i = 0; i < len_; ++i)
             {
-                for(int j = 0; j < columns_; ++j)
-                {
-                    data_[at(i, j)] = distribution(generator_);
-                }
+                data_[i] = distribution(generator_);
             }
         }
     }
@@ -112,15 +101,12 @@ public:
     Matrix map(T (*f)(T))
     {
         Matrix result(rows_, columns_);
-        for(int i = 0; i < rows_; ++i)
+        for(int i = 0; i < len_; ++i)
         {
-            for(int j = 0; j < columns_; ++j)
+            result.data_[i] = f(data_[i]);
+            if(std::isinf(result.data_[i]) || std::isnan(result.data_[i]))
             {
-                result.data_[at(i, j)] = f(data_[at(i, j)]);
-                if(std::isinf(result.data_[at(i, j)]) || std::isnan(result.data_[at(i, j)]))
-                {
-                    result.data_[at(i, j)] = 0;
-                }
+                result.data_[i] = 0;
             }
         }
         return result;
@@ -129,12 +115,9 @@ public:
     float sum() const
     {
         float sum = 0;
-        for(int i = 0; i < rows_; ++i)
+        for(int i = 0; i < len_; ++i)
         {
-            for(int j = 0; j < columns_; ++j)
-            {
-                sum += data_[at(i, j)];
-            }
+            sum += data_[i];
         }
         return sum;
     }
@@ -147,12 +130,9 @@ public:
             return *this;
         }
         Matrix result(rows_, columns_);
-        for(int i = 0; i < rows_; ++i)
+        for(int i = 0; i < len_; ++i)
         {
-            for(int j = 0; j < columns_; ++j)
-            {
-                result.data_[at(i, j)] = data_[at(i, j)]*o.data_[at(i, j)];
-            }
+            result.data_[i] = data_[i]*o.data_[i];
         }
         return result;
     }
@@ -176,12 +156,12 @@ public:
         float* old = data_;
         rows_ = o.rows_;
         columns_ = o.columns_;
-        data_ = new T[rows_*columns_];
+        len_ = o.len_;
+        data_ = new T[len_];
 
-        for(int i = 0; i < rows_; ++i)
+        for(int i = 0; i < len_; ++i)
         {
-            for(int j = 0; j < columns_; ++j)
-                data_[at(i, j)] = o.data_[at(i, j)];
+            data_[i] = o.data_[i];
         }
 
         delete[] old;
@@ -197,12 +177,9 @@ public:
             return *this;
         }
         Matrix result(rows_, columns_);
-        for(int i = 0; i < o.rows_; ++i)
+        for(int i = 0; i < len_; ++i)
         {
-            for(int j = 0; j < o.columns_; ++j)
-            {
-                result.data_[at(i, j)] = data_[at(i, j)] + o.data_[at(i, j)];
-            }
+            result.data_[i] = data_[i] + o.data_[i];
         }
         return result;
     }
@@ -214,12 +191,9 @@ public:
             std::cout << "ERROR: Cannot perform addition of matrices with different sizes!\n";
             return *this;
         }
-        for(int i = 0; i < o.rows_; ++i)
+        for(int i = 0; i < len_; ++i)
         {
-            for(int j = 0; j < o.columns_; ++j)
-            {
-                data_[at(i, j)] += o.data_[at(i, j)];
-            }
+            data_[i] += o.data_[i];
         }
         return *this;
     }
@@ -232,12 +206,9 @@ public:
             return *this;
         }
         Matrix result(rows_, columns_);
-        for(int i = 0; i < rows_; ++i)
+        for(int i = 0; i < len_; ++i)
         {
-            for(int j = 0; j < columns_; ++j)
-            {
-                result.data_[at(i, j)] = data_[at(i, j)] - o.data_[at(i, j)];
-            }
+            result.data_[i] = data_[i] - o.data_[i];
         }
         return result;
     }
@@ -249,12 +220,9 @@ public:
             std::cout << "ERROR: Cannot perform addition of matrices with different sizes!\n";
             return *this;
         }
-        for(int i = 0; i < o.rows_; ++i)
+        for(int i = 0; i < len_; ++i)
         {
-            for(int j = 0; j < o.columns_; ++j)
-            {
-                data_[at(i, j)] -= o.data_[at(i, j)];
-            }
+            data_[i] -= o.data_[i];
         }
         return *this;
     }
@@ -262,24 +230,18 @@ public:
     Matrix operator*(T f) const
     {
         Matrix result(rows_, columns_);
-        for(int i = 0; i < rows_; ++i)
+        for(int i = 0; i < len_; ++i)
         {
-            for(int j = 0; j < columns_; ++j)
-            {
-                result.data_[at(i, j)] = data_[at(i, j)]*f;
-            }
+            result.data_[i] = data_[i]*f;
         }
         return result;
     }
 
     Matrix& operator*=(T f)
     {
-        for(int i = 0; i < rows_; ++i)
+        for(int i = 0; i < len_; ++i)
         {
-            for(int j = 0; j < columns_; ++j)
-            {
-                data_[at(i, j)] *= f;
-            }
+            data_[i] *= f;
         }
         return *this;
     }
@@ -330,6 +292,7 @@ public:
 private:
     int rows_;
     int columns_;
+    int len_;
     std::mt19937 generator_;
     T* data_;
 
