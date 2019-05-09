@@ -57,6 +57,11 @@ public:
         return columns_;
     }
 
+    const T* getData() const
+    {
+        return data_;
+    }
+
     T get(int i, int j) const
     {
         if(i < 0 || i >= rows_ || j < 0 || j >= columns_)
@@ -112,6 +117,10 @@ public:
             for(int j = 0; j < columns_; ++j)
             {
                 result.data_[at(i, j)] = f(data_[at(i, j)]);
+                if(std::isinf(result.data_[at(i, j)]) || std::isnan(result.data_[at(i, j)]))
+                {
+                    result.data_[at(i, j)] = 0;
+                }
             }
         }
         return result;

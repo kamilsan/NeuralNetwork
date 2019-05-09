@@ -16,8 +16,8 @@ private:
     static void handleCurrentState(MNISTData* &data, NeuralNetwork* &nn, State &state);
     static void handleStateModelNotLoaded(MNISTData* &data, NeuralNetwork* &nn, State &state);
     static void handleStateModelLoaded(NeuralNetwork* &nn, State &state);
-    static void handleModelLoading(NeuralNetwork* &nn);
-    static void handleModelCreation(MNISTData* &data, NeuralNetwork* &nn);
+    static void handleModelLoading(NeuralNetwork* &nn, State &state);
+    static void handleModelCreation(MNISTData* &data, NeuralNetwork* &nn, State &state);
     static void handleDigitRecognition(NeuralNetwork* &nn);
     static void handleModelSave(NeuralNetwork* &nn);
 };

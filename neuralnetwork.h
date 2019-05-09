@@ -13,6 +13,7 @@ class NeuralNetwork
 {
 public:
     NeuralNetwork(int input_nodes, int hidden_nodes, int output_nodes, float learningRate);
+    NeuralNetwork(const NNMatrixType& weights_ih, const NNMatrixType& bias_h, const NNMatrixType& weights_ho, const NNMatrixType& bias_o, float learningRate);
 
     void feedforward(const NNMatrixType& input, NNMatrixType &result) const;
     void train(int epochs, 
@@ -24,10 +25,10 @@ public:
     void save(const char* filename) const;
     static NeuralNetwork* load(const char* filename);
 private:
+    NNMatrixType weights_ih_, bias_h_;
+    NNMatrixType weights_ho_, bias_o_;
     int input_nodes_, hidden_nodes_, output_nodes_;
-    float learningRate;
-    NNMatrixType weights_ih, weights_ho;
-    NNMatrixType bias_h, bias_o;
+    float learningRate_;
 
     static float sigmoid(float x)
     {
