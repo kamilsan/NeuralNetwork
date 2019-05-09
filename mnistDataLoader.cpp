@@ -140,7 +140,7 @@ void MNISTDataLoader::createMatriciesFromRawData(const std::vector<char*> &image
         {
             imageMatrixData[j] = (unsigned char)(images[i][j])/255.0f;
         }
-        imagesMatricies.push_back(std::shared_ptr<NNMatrixType>(new NNMatrixType(imageMatrixData, imagePixels, 1)));
+        imagesMatricies.push_back(std::make_shared<NNMatrixType>(imageMatrixData, imagePixels, 1));
         
         int label = +labels[i];
         for(int n = 0; n < POSSIBLE_LABELS; ++n)
