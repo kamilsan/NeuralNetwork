@@ -80,9 +80,11 @@ void UserInterface::handleStateModelNotLoaded(MNISTData* &data, NeuralNetwork* &
     switch(choice)
     {
         case 1:
+            std::cout << "\n";
             handleModelLoading(nn, state);
             break;
         case 2:
+            std::cout << "\n";
             handleModelCreation(data, nn, state);
             break;
         case 3:
@@ -110,12 +112,15 @@ void UserInterface::handleStateModelLoaded(NeuralNetwork* &nn, State &state)
     switch(choice)
     {
         case 1:
+            std::cout << "\n";
             handleDigitRecognition(nn);
             break;
         case 2:
             state = State::ModelNotLoaded;
+            std::cout << "\n";
             break;
         case 3:
+            std::cout << "\n";
             handleModelSave(nn);
             break;
         case 4:
@@ -142,7 +147,7 @@ void UserInterface::handleModelLoading(NeuralNetwork* &nn, State &state)
         return;
     }
 
-    std::cout << "Model loaded!\n";
+    std::cout << "Model loaded!\n\n";
     state = State::ModelLoaded;
 }
 
@@ -206,7 +211,7 @@ void UserInterface::handleModelCreation(MNISTData* &data, NeuralNetwork* &nn, St
     
     std::cout << "Testing...\n";
     float acc = nn->test(data->getTestingData(), data->getTestingLabels());
-    std::cout << "Model created! Accuracity: " << acc << "%\n";
+    std::cout << "Model created! Accuracity: " << acc << "%\n\n";
 
     state = State::ModelLoaded;
 }
@@ -260,8 +265,8 @@ void UserInterface::handleDigitRecognition(NeuralNetwork* &nn)
 
     printAsciiImage(imagePixels);
 
-    std::cout << "Result matrix:\n" << resultMatrix << "\n";
-    std::cout << "Predicted Label:\n" << predictedLabel << "\n";
+    std::cout << "Result matrix:\n" << resultMatrix << "\n\n";
+    std::cout << "Predicted Label:\n" << predictedLabel << "\n\n";
 }
 
 void UserInterface::handleModelSave(NeuralNetwork* &nn)
@@ -271,5 +276,5 @@ void UserInterface::handleModelSave(NeuralNetwork* &nn)
     std::cin >> filename;
 
     nn->save(filename.c_str());
-    std::cout << "Model saved!\n";
+    std::cout << "Model saved!\n\n";
 }
