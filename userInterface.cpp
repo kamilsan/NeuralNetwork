@@ -13,6 +13,24 @@ void UserInterface::clearInputBuffer()
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
 
+void UserInterface::printAsciiImage(const char* image)
+{
+    const int IMG_SIZE = 28;
+    std::cout << "\n";
+    for(int y = 0, k = 0; y < IMG_SIZE; ++y)
+    {
+        for(int x = 0; x < IMG_SIZE; ++x, k+=3)
+        {
+            if((unsigned char)image[k] > 127)
+            {
+                std::cout << "X";
+            }
+            else std::cout << " ";
+        }
+        std::cout << "\n";
+    }
+}
+
 void UserInterface::handleInteraction()
 {    
     NeuralNetwork* nn = nullptr;
@@ -222,7 +240,7 @@ void UserInterface::handleDigitRecognition(NeuralNetwork* &nn)
 
     for(int i = 0; i < IMAGE_PIXELS; ++i)
     {
-        matrixData[i] = (unsigned char)(imagePixels[i])/255.0f;
+        matrixData[i] = ((unsigned char)imagePixels[3*i])/255.0f;
     }
 
     NNMatrixType inputMatrix = NNMatrixType(matrixData, IMAGE_PIXELS, 1);
@@ -239,6 +257,8 @@ void UserInterface::handleDigitRecognition(NeuralNetwork* &nn)
             max = resultMatrix.get(i, 0);
         }
     }
+
+    printAsciiImage(imagePixels);
 
     std::cout << "Result matrix:\n" << resultMatrix << "\n";
     std::cout << "Predicted Label:\n" << predictedLabel << "\n";

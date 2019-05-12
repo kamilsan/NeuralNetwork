@@ -13,6 +13,7 @@ private:
     enum class State { ModelNotLoaded, ModelLoaded, Exit };
 
     static void clearInputBuffer();
+    static void printAsciiImage(const char* image);
     static void handleCurrentState(MNISTData* &data, NeuralNetwork* &nn, State &state);
     static void handleStateModelNotLoaded(MNISTData* &data, NeuralNetwork* &nn, State &state);
     static void handleStateModelLoaded(NeuralNetwork* &nn, State &state);

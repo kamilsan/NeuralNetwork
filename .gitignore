@@ -2,4 +2,5 @@
 *.o
 program
 tests
-nn_test.model
+*.model
+*.ppm
