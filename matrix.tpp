@@ -30,6 +30,17 @@ Matrix<T>::Matrix(const T* data, int rows, int columns): rows_(rows), columns_(c
 }
 
 template<typename T>
+Matrix<T>::Matrix(Matrix&& o)
+{
+    data_ = o.data_;
+    rows_ = o.rows_;
+    columns_ = o.columns_;
+    len_ = o.len_;
+    generator_ = std::move(o.generator_);
+    o.data_ = nullptr;
+}
+
+template<typename T>
 Matrix<T>::~Matrix()
 {
     delete[] data_;
@@ -110,9 +121,9 @@ Matrix<T> Matrix<T>::map(T (*f)(T))
 }
 
 template<typename T>
-float Matrix<T>::sum() const
+T Matrix<T>::sum() const
 {
-    float sum = 0;
+    T sum = 0;
     for(int i = 0; i < len_; ++i)
     {
         sum += data_[i];
@@ -167,6 +178,22 @@ Matrix<T>& Matrix<T>::operator=(const Matrix& o)
 
     delete[] old;
     
+    return *this;
+}
+
+template<typename T>
+Matrix<T>& Matrix<T>::operator=(Matrix&& o)
+{
+    if(&o != this)
+    {
+        if(data_) delete[] data_;
+        data_ = o.data_;
+        rows_ = o.rows_;
+        columns_ = o.columns_;
+        len_ = o.len_;
+        generator_ = std::move(o.generator_);
+        o.data_ = nullptr;
+    }
     return *this;
 }
 

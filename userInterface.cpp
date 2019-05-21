@@ -1,6 +1,7 @@
 #include <iostream>
 #include <limits>
 #include <exception>
+#include <chrono>
 
 #include "userInterface.h"
 #include "mnistDataLoader.h"
@@ -207,8 +208,12 @@ void UserInterface::handleModelCreation(MNISTData* &data, NeuralNetwork* &nn, St
     nn = new NeuralNetwork(784, nHiddenLayerNodes, 10, learingRate);
     
     std::cout << "Training...\n";
+    auto timeStart = std::chrono::high_resolution_clock::now();
     nn->train(nEpochs, batchSize, data->getTrainingData(), data->getTrainingLabels());
-    
+    auto timeEnd = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> timeElapsed = timeEnd - timeStart;
+    std::cout << "Training took " << timeElapsed.count() << "s\n";
+
     std::cout << "Testing...\n";
     float acc = nn->test(data->getTestingData(), data->getTestingLabels());
     std::cout << "Model created! Accuracity: " << acc << "%\n\n";

@@ -13,6 +13,7 @@ public:
     explicit Matrix(): Matrix(1, 1) {}
     Matrix(const T* data, int rows, int columns);
     Matrix(const Matrix& o): Matrix(o.data_, o.rows_, o.columns_) {}
+    Matrix(Matrix&& o);
 
     ~Matrix();
 
@@ -24,11 +25,12 @@ public:
     void zero();
     void randomize(T min, T max);
     Matrix map(T (*f)(T));
-    float sum() const;
+    T sum() const;
     Matrix hadamard(const Matrix& o);
     Matrix static transpose(const Matrix& m);
 
     Matrix& operator=(const Matrix& o);
+    Matrix& operator=(Matrix&& o);
     Matrix operator+(const Matrix& o) const;
     Matrix& operator+=(const Matrix& o);
     Matrix operator-(const Matrix& o) const;
