@@ -15,7 +15,7 @@ public:
               testingData_(testingData), testingLabels_(testingLabels) 
     {}
 
-    MatrixVec const& getTrainingData() const
+    const MatrixVec& getTrainingData() const
     {
         return trainingData_;
     }
@@ -24,7 +24,7 @@ public:
         trainingData_ = trainingData;
     }
 
-    MatrixVec const& getTrainingLabels() const
+    const MatrixVec& getTrainingLabels() const
     {
         return trainingLabels_;
     }
@@ -33,7 +33,7 @@ public:
         trainingLabels_ = trainingLabels;
     }
 
-    MatrixVec const& getTestingData() const
+    const MatrixVec& getTestingData() const
     {
         return testingData_;
     }
@@ -42,7 +42,7 @@ public:
         testingData_ = testingData;
     }
 
-    MatrixVec const& getTestingLabels() const
+    const MatrixVec& getTestingLabels() const
     {
         return testingLabels_;
     }

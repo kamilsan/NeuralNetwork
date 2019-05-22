@@ -1,6 +1,7 @@
 #include <fstream>
 
 #include "mnistDataLoader.h"
+#include "data_load_failure.h"
 
 typedef std::vector<std::shared_ptr<NNMatrixType>> MatrixVec;
 
@@ -14,11 +15,10 @@ int MNISTDataLoader::reverseInt(int number)
     return ((int)c1 << 24) + ((int)c2 << 16) + ((int)c3 << 8) + c4;
 }
 
-void MNISTDataLoader::loadData(MNISTData& data,
-                       const char* trainingImagesFilename,
-                       const char* trainingLabelsFilename,
-                       const char* testingImagesFilename,
-                       const char* testingLabelsFilename)
+MNISTData* MNISTDataLoader::loadData(const char* trainingImagesFilename,
+                               const char* trainingLabelsFilename,
+                               const char* testingImagesFilename,
+                               const char* testingLabelsFilename)
 {
     std::vector<char*> trainingImages;
     int nLoadedTrainingImages;
@@ -54,7 +54,7 @@ void MNISTDataLoader::loadData(MNISTData& data,
     delete[] trainingLabels;
     delete[] testingLabels;
     
-    data = MNISTData(trainingDataMatrix, trainingLabelsMatrix, testingDataMatrix, testingLabelsMatrix);
+    return new MNISTData(trainingDataMatrix, trainingLabelsMatrix, testingDataMatrix, testingLabelsMatrix);
 }
 
 void MNISTDataLoader::loadImages(const char* imagesFilename, 
@@ -140,7 +140,7 @@ void MNISTDataLoader::createMatriciesFromRawData(const std::vector<char*> &image
         {
             imageMatrixData[j] = (unsigned char)(images[i][j])/255.0f;
         }
-        imagesMatricies.push_back(std::shared_ptr<NNMatrixType>(new NNMatrixType(imageMatrixData, imagePixels, 1)));
+        imagesMatricies.push_back(std::make_shared<NNMatrixType>(imageMatrixData, imagePixels, 1));
         
         int label = +labels[i];
         for(int n = 0; n < POSSIBLE_LABELS; ++n)

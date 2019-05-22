@@ -1,6 +1,6 @@
 .vscode/
 *.o
 program
-*.ppm
-*.model
 tests
+*.model
+*.ppm
