@@ -205,7 +205,7 @@ void UserInterface::handleModelCreation(MNISTData* &data, NeuralNetwork* &nn, St
         }
     } while(learingRate <= 0);
 
-    nn = new NeuralNetwork(784, nHiddenLayerNodes, 10, learingRate);
+    nn = new NeuralNetwork(784, learingRate);
     
     std::cout << "Training...\n";
     auto timeStart = std::chrono::high_resolution_clock::now();

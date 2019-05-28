@@ -6,52 +6,30 @@
 
 #include "neuralnetwork.h"
 #include "data_load_failure.h"
+#include "layer.h"
 
-NeuralNetwork::NeuralNetwork(int input_nodes, int hidden_nodes, int output_nodes, float learningRate): input_nodes_(input_nodes), hidden_nodes_(hidden_nodes), output_nodes_(output_nodes), learningRate_(learningRate)
+NeuralNetwork::NeuralNetwork(int inputNodes, float learningRate): 
+    inputNodes_(inputNodes),
+    learningRate_(learningRate)
+{}
+
+void NeuralNetwork::addLayer(const std::shared_ptr<Layer>& layer)
 {
-    weights_ih_ = NNMatrixType(hidden_nodes, input_nodes);
-    weights_ho_ = NNMatrixType(output_nodes, hidden_nodes);
-    bias_h_ = NNMatrixType(hidden_nodes, 1);
-    bias_o_ = NNMatrixType(output_nodes, 1);
-
-    float r = 4.0*std::sqrt(6.0/(input_nodes + hidden_nodes));
-    weights_ih_.randomize(-r, r);
-
-    r = 4.0*std::sqrt(6.0/(hidden_nodes + output_nodes));
-    weights_ho_.randomize(-r, r);
-
-    bias_h_.zero();
-    bias_o_.zero();
+    layers_.push_back(std::move(layer));
 }
 
-NeuralNetwork::NeuralNetwork(const NNMatrixType& weights_ih, const NNMatrixType& bias_h, const NNMatrixType& weights_ho, const NNMatrixType& bias_o, float learningRate): weights_ih_(weights_ih), bias_h_(bias_h), weights_ho_(weights_ho), bias_o_(bias_o), learningRate_(learningRate)
+void NeuralNetwork::feedforward(const NNMatrixType& input, NNMatrixType& result) const
 {
-    input_nodes_ = weights_ih_.getColumns();
-    hidden_nodes_ = weights_ho_.getColumns();
-    output_nodes_ = weights_ho_.getRows();
-}
-
-void NeuralNetwork::feedforward(const NNMatrixType& input, NNMatrixType &result) const
-{
-    if(input.getRows() != input_nodes_ || input.getColumns() != 1)
+    if(input.getRows() != inputNodes_ || input.getColumns() != 1)
     {
         std::cout << "ERROR: passed input matrix has wrong dimensions!\n";
         return;
     }
 
-    result = weights_ih_*input + bias_h_;
-    result = result.map(relu);
-    result = weights_ho_*result + bias_o_;
-    //Softmax
-    result = result.map(std::exp);
-    float den = 1.0f/result.sum();
-    if(std::isinf(den))
+    result = input;
+    for(auto it = layers_.begin(); it < layers_.end(); ++it)
     {
-        result.zero();
-    }
-    else
-    {
-        result *= den;
+        result = (*it)->feedforward(result);
     }
 }
 
@@ -75,22 +53,12 @@ void NeuralNetwork::train(int epochs,
     NNMatrixType input;
     NNMatrixType target;
 
-    NNMatrixType bh_grad(hidden_nodes_, 1);
-    NNMatrixType bo_grad(output_nodes_, 1);
-    NNMatrixType wih_grad(hidden_nodes_, input_nodes_);
-    NNMatrixType who_grad(output_nodes_, hidden_nodes_);
-
     for(int epoch = 0; epoch < epochs; ++epoch)
     {
         std::cout << "Epoch " << epoch + 1 << " out of " << epochs << "\n";
         std::shuffle(permutaionTable.begin(), permutaionTable.end(), generator);
         for(int n = 0; n < numBatches; ++n)
         {
-            bh_grad.zero();
-            bo_grad.zero();
-            wih_grad.zero();
-            who_grad.zero();
-
             int startIdx = n*batchSize;
 
             for(int i = 0; i < batchSize; ++i)
@@ -101,41 +69,47 @@ void NeuralNetwork::train(int epochs,
                 input = *inputs[permutaionTable[idx]];
                 target = *targets[permutaionTable[idx]];
 
-                if(input.getRows() != input_nodes_ || input.getColumns() != 1)
+                if(input.getRows() != inputNodes_ || input.getColumns() != 1)
                 {
                     std::cout << "ERROR: passed input matrix has wrong dimensions!\n";
                     return;
                 }
 
-                NNMatrixType hidden_unactive = weights_ih_*input + bias_h_;
-                NNMatrixType hidden = hidden_unactive.map(relu);
-                NNMatrixType output_unactive = weights_ho_*hidden + bias_o_;
+                //forward pass
+                NNMatrixType output = input;
+                //Vectors storing results of layers' calculations
+                //used in backpropagation
+                std::vector<NNMatrixType> weightedInputs;
+                std::vector<NNMatrixType> outputs;
+                weightedInputs.reserve(layers_.size());
+                outputs.reserve(layers_.size());
 
-                //Softmax
-                NNMatrixType output = output_unactive.map(std::exp);
-                float den = 1.0/output.sum();
-                output *= den;
+                for(auto it = layers_.begin(); it < layers_.end(); ++it)
+                {
+                    NNMatrixType weightedInput;
+                    output = (*it)->feedforward(output, weightedInput);
+                    weightedInputs.emplace_back(weightedInput);
+                    outputs.emplace_back(output);
+                }
 
-                NNMatrixType difference = target - output;
-                //softmax + negative log-likelihood
-                NNMatrixType deltaOutput = difference;
+                NNMatrixType error = output - target;
 
-                bo_grad += deltaOutput;
-                who_grad += deltaOutput * NNMatrixType::transpose(hidden);
+                int backpropIdx = layers_.size() - 1;
+                for(auto it = layers_.rbegin(); it < layers_.rend() - 1; ++it)
+                {
+                    error = (*it)->backpropagate(error, weightedInputs[backpropIdx], outputs[backpropIdx - 1]);
+                    backpropIdx--;
+                }
 
-                NNMatrixType error_hidden = NNMatrixType::transpose(weights_ho_) * deltaOutput;
-                NNMatrixType gradActivation_hidden = hidden_unactive.map(drelu);
-
-                NNMatrixType deltaHidden = error_hidden.hadamard(gradActivation_hidden);
-                
-                bh_grad += deltaHidden;
-                wih_grad += deltaHidden * NNMatrixType::transpose(input);
+                //Handle first layer differently - pass input instead of last layer's output
+                error = layers_[0]->backpropagate(error, weightedInputs[0], input);
             }
-
-            bias_o_ += learningRate_ * bo_grad;
-            weights_ho_ += learningRate_ * who_grad;
-            bias_h_ += learningRate_ * bh_grad;
-            weights_ih_ += learningRate_ * wih_grad;
+            
+            //Adjust weights and biases
+            for(auto it = layers_.begin(); it < layers_.end(); ++it)
+            {
+                (*it)->performSDGStep(learningRate_);
+            }
         }
     }
 }
@@ -184,6 +158,9 @@ float NeuralNetwork::test(const std::vector<std::shared_ptr<NNMatrixType>>& inpu
 
 void NeuralNetwork::save(const char* filename) const
 {
+    //TODO
+    std::cout << "NOT IMPLEMENTED!\n";
+    /*
     std::ofstream ofile(filename, std::ios::binary);
 
     ofile.write((char*)&learningRate_, sizeof(learningRate_));
@@ -209,10 +186,16 @@ void NeuralNetwork::save(const char* filename) const
     ofile.write((char*)bias_o_.getData(), len*sizeof(float));
 
     ofile.close();
+    */
 }
 
 NeuralNetwork* NeuralNetwork::load(const char* filename)
 {
+    //TODO
+    std::cout << "NOT IMPLEMENTED!\n";
+    return nullptr;
+    
+    /*
     std::ifstream ifile(filename, std::ios::binary);
 
     if(!ifile.is_open())
@@ -258,4 +241,5 @@ NeuralNetwork* NeuralNetwork::load(const char* filename)
     delete[] bias_o_buffer;
 
     return new NeuralNetwork(weights_ih, bias_h, weights_ho, bias_o, learingRate);
+    */
 }

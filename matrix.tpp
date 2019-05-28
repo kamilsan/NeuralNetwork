@@ -106,7 +106,7 @@ void Matrix<T>::randomize(T min, T max)
 }
 
 template<typename T>
-Matrix<T> Matrix<T>::map(T (*f)(T))
+Matrix<T> Matrix<T>::map(T (*f)(T)) const
 {
     Matrix result(rows_, columns_);
     for(int i = 0; i < len_; ++i)
@@ -132,7 +132,7 @@ T Matrix<T>::sum() const
 }
 
 template<typename T>
-Matrix<T> Matrix<T>::hadamard(const Matrix<T>& o)
+Matrix<T> Matrix<T>::hadamard(const Matrix<T>& o) const
 {
     if(o.rows_ != rows_ || o.columns_ != columns_)
     {

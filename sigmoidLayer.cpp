@@ -1,6 +1,6 @@
-#include "reluLayer.h"
+#include "sigmoidLayer.h"
 
-ReLULayer::ReLULayer(unsigned int nodes, unsigned int prevNodes)
+SigmoidLayer::SigmoidLayer(unsigned int nodes, unsigned int prevNodes)
 {
     weights_ = NNMatrixType(nodes, prevNodes);
     bias_ = NNMatrixType(nodes, 1);
@@ -17,28 +17,27 @@ ReLULayer::ReLULayer(unsigned int nodes, unsigned int prevNodes)
     nablaB_.zero();
 }
 
-NNMatrixType ReLULayer::feedforward(const NNMatrixType& input) const
+NNMatrixType SigmoidLayer::feedforward(const NNMatrixType& input) const
 {
     NNMatrixType weightedInput = calculateWeightedInput(input);
-    return weightedInput.map(relu);
+    return weightedInput.map(sigmoid);
 }
 
-NNMatrixType ReLULayer::feedforward(const NNMatrixType& input, 
+NNMatrixType SigmoidLayer::feedforward(const NNMatrixType& input, 
                                     NNMatrixType& weightedInput)
 {
     weightedInput = calculateWeightedInput(input);
-    return weightedInput.map(relu);
+    return weightedInput.map(sigmoid);
 }
 
-NNMatrixType ReLULayer::backpropagate(const NNMatrixType& error,
+NNMatrixType SigmoidLayer::backpropagate(const NNMatrixType& error,
                                        const NNMatrixType& weightedInput,
                                        const NNMatrixType& prevOutput)
 {
-    NNMatrixType delta = error.hadamard(weightedInput.map(drelu));
+    NNMatrixType delta = error.hadamard(weightedInput.map(dsigmoid));
     NNMatrixType nablaW = delta * NNMatrixType::transpose(prevOutput);
 
     NNMatrixType output = NNMatrixType::transpose(weights_) * delta;
-
 
     nablaW_ += nablaW;
     nablaB_ += delta;

@@ -2,10 +2,10 @@
 
 #include "layer.h"
 
-class ReLULayer : public Layer
+class SigmoidLayer : public Layer
 {
 public:
-    ReLULayer(unsigned int nodes, unsigned int prevNodes);
+    SigmoidLayer(unsigned int nodes, unsigned int prevNodes);
 
     virtual NNMatrixType feedforward(const NNMatrixType& input, 
                                      NNMatrixType& weightedInput);
@@ -14,17 +14,15 @@ public:
                                        const NNMatrixType& weightedInput,
                                        const NNMatrixType& prevOutput);
 private:
-    //Rectified linear unit activation function
-    static float relu(float value)
+    //Sigmoid activation function
+    static float sigmoid(float x)
     {
-        if(value < 0.0f) return 0.0f;
-        else return value;
+        return 1.0/(1.0 + exp(-x));
     }
-
-    //Derivative of ReLU, used in backpropagation
-    static float drelu(float value)
+    
+    //Derivative of sigmoid, used in backpropagation
+    static float dsigmoid(float x)
     {
-        if(value < 0.0f) return 0.0f;
-        else return 1.0f;
+        return sigmoid(x)*(1.0-sigmoid(x));
     }
 };

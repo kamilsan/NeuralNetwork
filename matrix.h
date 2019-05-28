@@ -24,9 +24,9 @@ public:
 
     void zero();
     void randomize(T min, T max);
-    Matrix map(T (*f)(T));
+    Matrix map(T (*f)(T)) const;
     T sum() const;
-    Matrix hadamard(const Matrix& o);
+    Matrix hadamard(const Matrix& o) const;
     Matrix static transpose(const Matrix& m);
 
     Matrix& operator=(const Matrix& o);

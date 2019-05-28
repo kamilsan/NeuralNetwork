@@ -2,11 +2,11 @@ CC=g++
 CFLAGS= -std=c++17 -O3 -Wall -pedantic
 CINCL= -I./include
 
-program: main.o neuralnetwork.o layer.o reluLayer.o mnistDataLoader.o userInterface.o image.o
-	${CC} ${CFLAGS} main.o neuralnetwork.o layer.o reluLayer.o mnistDataLoader.o userInterface.o image.o -o program
+program: main.o neuralnetwork.o layer.o reluLayer.o sigmoidLayer.o mnistDataLoader.o userInterface.o image.o
+	${CC} ${CFLAGS} main.o neuralnetwork.o layer.o reluLayer.o sigmoidLayer.o mnistDataLoader.o userInterface.o image.o -o program
 
-tests: tests.o neuralnetwork.o layer.o reluLayer.o mnistDataLoader.o userInterface.o image.o
-	${CC} ${CFLAGS} tests.o neuralnetwork.o layer.o reluLayer.o mnistDataLoader.o userInterface.o image.o -o tests
+tests: tests.o neuralnetwork.o layer.o reluLayer.o sigmoidLayer.o mnistDataLoader.o userInterface.o image.o
+	${CC} ${CFLAGS} tests.o neuralnetwork.o layer.o reluLayer.o sigmoidLayer.o mnistDataLoader.o userInterface.o image.o -o tests
 
 tests.o: tests.cpp
 	${CC} ${CFLAGS} ${CINCL} -c tests.cpp -o tests.o
@@ -22,6 +22,9 @@ layer.o: layer.cpp layer.h
 
 reluLayer.o: reluLayer.cpp reluLayer.h layer.cpp layer.h
 	${CC} ${CFLAGS} -c reluLayer.cpp -o reluLayer.o
+
+sigmoidLayer.o: sigmoidLayer.cpp sigmoidLayer.h layer.cpp layer.h
+	${CC} ${CFLAGS} -c sigmoidLayer.cpp -o sigmoidLayer.o
 
 mnistDataLoader.o: mnistDataLoader.cpp mnistDataLoader.h mnistData.h
 	${CC} ${CFLAGS} -c mnistDataLoader.cpp -o mnistDataLoader.o

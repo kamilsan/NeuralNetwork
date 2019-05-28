@@ -7,13 +7,16 @@
 
 #include "matrix.h"
 
+class Layer;
+
 typedef Matrix<float> NNMatrixType;
 
 class NeuralNetwork
 {
 public:
-    NeuralNetwork(int input_nodes, int hidden_nodes, int output_nodes, float learningRate);
-    NeuralNetwork(const NNMatrixType& weights_ih, const NNMatrixType& bias_h, const NNMatrixType& weights_ho, const NNMatrixType& bias_o, float learningRate);
+    NeuralNetwork(int inputNodes, float learningRate);
+
+    void addLayer(const std::shared_ptr<Layer>& layer);
 
     void feedforward(const NNMatrixType& input, NNMatrixType &result) const;
     void train(int epochs, 
@@ -25,28 +28,7 @@ public:
     void save(const char* filename) const;
     static NeuralNetwork* load(const char* filename);
 private:
-    NNMatrixType weights_ih_, bias_h_;
-    NNMatrixType weights_ho_, bias_o_;
-    int input_nodes_, hidden_nodes_, output_nodes_;
+    int inputNodes_;
     float learningRate_;
-
-    static float sigmoid(float x)
-    {
-        return 1.0/(1.0 + exp(-x));
-    }
-    static float dsigmoid(float x)
-    {
-        return x*(1.0-x);
-    }
-
-    static float relu(float x)
-    {
-        if(x < 0.0f) return 0;
-        else return x;
-    }
-    static float drelu(float x)
-    {
-        if(x < 0.0f) return 0;
-        else return 1.0;
-    }
+    std::vector<std::shared_ptr<Layer>> layers_;
 };

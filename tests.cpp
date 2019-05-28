@@ -78,7 +78,8 @@ TEST_CASE("matrix operations can be performed", "[matrix]")
 
 TEST_CASE("saving and loading neural network", "[nn]")
 {
-    NeuralNetwork nn = NeuralNetwork(10, 20, 5, 0.1);
+    //NeuralNetwork nn = NeuralNetwork(10, 20, 5, 0.1);
+    NeuralNetwork nn = NeuralNetwork(10, 0.1);
 
     float matrixData[] = {1, 2, 3, 1, 2, 3, 6, 3, 1, 2};
     NNMatrixType input(matrixData, 10, 1);
