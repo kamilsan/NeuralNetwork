@@ -7,6 +7,8 @@
 #include "mnistDataLoader.h"
 #include "data_load_failure.h"
 #include "image.h"
+#include "reluLayer.h"
+#include "sigmoidLayer.h"
 
 void UserInterface::clearInputBuffer()
 {
@@ -16,11 +18,11 @@ void UserInterface::clearInputBuffer()
 
 void UserInterface::printAsciiImage(const char* image)
 {
-    const int IMG_SIZE = 28;
+    const unsigned int IMG_SIZE = 28;
     std::cout << "\n";
-    for(int y = 0, k = 0; y < IMG_SIZE; ++y)
+    for(unsigned int y = 0, k = 0; y < IMG_SIZE; ++y)
     {
-        for(int x = 0; x < IMG_SIZE; ++x, k+=3)
+        for(unsigned int x = 0; x < IMG_SIZE; ++x, k+=3)
         {
             if((unsigned char)image[k] > 127)
             {
@@ -54,6 +56,9 @@ void UserInterface::handleCurrentState(MNISTData* &data, NeuralNetwork* &nn, Sta
     {
         case State::ModelNotLoaded:
             handleStateModelNotLoaded(data, nn, state);
+            break;
+        case State::LayersAddition:
+            handleStateLayersAddition(data, nn, state);
             break;
         case State::ModelLoaded:
             handleStateModelLoaded(nn, state);
@@ -94,9 +99,100 @@ void UserInterface::handleStateModelNotLoaded(MNISTData* &data, NeuralNetwork* &
     }
 }
 
-void UserInterface::handleStateModelLoaded(NeuralNetwork* &nn, State &state)
+void UserInterface::handleStateLayersAddition(const MNISTData* data, NeuralNetwork* nn, State &state)
 {
     int choice;
+    do
+    {
+        std::cout << "What type of layer do you want to add?\n";
+        std::cout << "1. relu\n";
+        std::cout << "2. sigmoid\n";
+        std::cout << "3. none\n";
+        std::cout << ">>>";
+
+        std::cin >> choice;
+        if(!std::cin) clearInputBuffer();
+    } while(choice < 1 || choice > 3);
+
+    std::cout << "\n";
+
+    switch(choice)
+    {
+        case 1:
+            addLayer<ReLULayer>(nn);
+            break;
+        case 2:
+            addLayer<SigmoidLayer>(nn);
+            break;
+        case 3:
+            if(nn->getLayersCount() == 0)
+            {
+                std::cout << "Please add at least one layer.\n\n";
+            }
+            else trainModel(data, nn, state);
+            break;
+    }
+}
+
+template <typename T>
+void UserInterface::addLayer(NeuralNetwork* nn)
+{
+    unsigned int nodes = 0;
+    do
+    {
+        std::cout << "How many nodes should this layer have?\n>>>";
+        std::cin >> nodes;
+        if(!std::cin)
+        {
+            clearInputBuffer();
+            nodes = 0;
+        }
+    } while(nodes < 1);
+
+    nn->addLayer<T>(nodes);
+    
+    std::cout << "\n";
+}
+
+void UserInterface::trainModel(const MNISTData* data, NeuralNetwork* nn, State &state)
+{
+    auto readIntFromUserInputAndVerify = [](const char* prompt, unsigned int &value, unsigned int condition) 
+    { 
+        do
+        {
+            std::cout << prompt;
+            std::cin >> value;
+            if(!std::cin)
+            {
+                clearInputBuffer();
+                value = 0;
+            }
+        } while(value < condition);
+    };
+
+    unsigned int nEpochs;
+    unsigned int batchSize; 
+
+    readIntFromUserInputAndVerify("Epochs: ", nEpochs, 1);
+    readIntFromUserInputAndVerify("Batch size: ", batchSize, 1);
+
+    std::cout << "\nTraining...\n";
+    auto timeStart = std::chrono::high_resolution_clock::now();
+    nn->train(nEpochs, batchSize, data->getTrainingData(), data->getTrainingLabels());
+    auto timeEnd = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> timeElapsed = timeEnd - timeStart;
+    std::cout << "Training took " << timeElapsed.count() << "s\n";
+
+    std::cout << "\nTesting...\n";
+    float acc = nn->test(data->getTestingData(), data->getTestingLabels());
+    std::cout << "Model created! Accuracity: " << acc << "%\n\n";
+
+    state = State::ModelLoaded;
+}
+
+void UserInterface::handleStateModelLoaded(NeuralNetwork* nn, State &state)
+{
+    unsigned int choice;
     do
     {
         std::cout << "Choose one of the listed actions:\n";
@@ -171,29 +267,7 @@ void UserInterface::handleModelCreation(MNISTData* &data, NeuralNetwork* &nn, St
 
     if(nn != nullptr) delete nn;
 
-    int nHiddenLayerNodes;
-    int nEpochs;
-    int batchSize; 
     float learingRate;
-
-    auto readIntFromUserInputAndVerify = [](const char* prompt, int &value, int condition) 
-    { 
-        do
-        {
-            std::cout << prompt;
-            std::cin >> value;
-            if(!std::cin)
-            {
-                clearInputBuffer();
-                value = 0;
-            }
-        } while(value < condition);
-    };
-
-    readIntFromUserInputAndVerify("Enter number of neurons in hidden layer: ", nHiddenLayerNodes, 1);
-    readIntFromUserInputAndVerify("Epochs: ", nEpochs, 1);
-    readIntFromUserInputAndVerify("Batch size: ", batchSize, 1);
-
     do
     {
         std::cout << "Learning rate: ";
@@ -206,28 +280,19 @@ void UserInterface::handleModelCreation(MNISTData* &data, NeuralNetwork* &nn, St
     } while(learingRate <= 0);
 
     nn = new NeuralNetwork(784, learingRate);
-    
-    std::cout << "Training...\n";
-    auto timeStart = std::chrono::high_resolution_clock::now();
-    nn->train(nEpochs, batchSize, data->getTrainingData(), data->getTrainingLabels());
-    auto timeEnd = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> timeElapsed = timeEnd - timeStart;
-    std::cout << "Training took " << timeElapsed.count() << "s\n";
 
-    std::cout << "Testing...\n";
-    float acc = nn->test(data->getTestingData(), data->getTestingLabels());
-    std::cout << "Model created! Accuracity: " << acc << "%\n\n";
+    state = State::LayersAddition;
 
-    state = State::ModelLoaded;
+    std::cout << "\n";
 }
 
-void UserInterface::handleDigitRecognition(NeuralNetwork* &nn)
+void UserInterface::handleDigitRecognition(const NeuralNetwork* nn)
 {
     std::cout << "Enter image filename: ";
     std::string filename;
     std::cin >> filename;
     
-    std::unique_ptr<Image> img;
+    std::unique_ptr<Image> img = nullptr;
     try
     {
         img = std::make_unique<Image>(filename.c_str());
@@ -244,11 +309,11 @@ void UserInterface::handleDigitRecognition(NeuralNetwork* &nn)
         return;
     }
 
-    const int IMAGE_PIXELS = 784;
+    const unsigned int IMAGE_PIXELS = 784;
     float matrixData[IMAGE_PIXELS];
     const char* imagePixels = img->getPixels();
 
-    for(int i = 0; i < IMAGE_PIXELS; ++i)
+    for(unsigned int i = 0; i < IMAGE_PIXELS; ++i)
     {
         matrixData[i] = ((unsigned char)imagePixels[3*i])/255.0f;
     }
@@ -256,9 +321,9 @@ void UserInterface::handleDigitRecognition(NeuralNetwork* &nn)
     NNMatrixType inputMatrix = NNMatrixType(matrixData, IMAGE_PIXELS, 1);
     NNMatrixType resultMatrix = nn->feedforward(inputMatrix);
 
-    int predictedLabel = 0;
+    unsigned int predictedLabel = 0;
     float max = resultMatrix.get(0, 0);
-    for(int i = 0; i < resultMatrix.getRows(); ++i)
+    for(unsigned int i = 0; i < resultMatrix.getRows(); ++i)
     {
         if(resultMatrix.get(i, 0) > max)
         {
@@ -273,7 +338,7 @@ void UserInterface::handleDigitRecognition(NeuralNetwork* &nn)
     std::cout << "Predicted Label:\n" << predictedLabel << "\n\n";
 }
 
-void UserInterface::handleModelSave(NeuralNetwork* &nn)
+void UserInterface::handleModelSave(const NeuralNetwork* nn)
 {
     std::cout << "Enter model filename: ";
     std::string filename;

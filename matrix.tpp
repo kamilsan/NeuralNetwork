@@ -1,7 +1,7 @@
 #include "matrix.h"
 
 template<typename T>
-Matrix<T>::Matrix(int rows, int columns): rows_(rows), columns_(columns)
+Matrix<T>::Matrix(unsigned int rows, unsigned int columns): rows_(rows), columns_(columns)
 {
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     generator_ = std::mt19937(seed);
@@ -9,21 +9,21 @@ Matrix<T>::Matrix(int rows, int columns): rows_(rows), columns_(columns)
     len_ = rows*columns;
     data_ = new T[len_];
 
-    for(int i = 0; i < len_; ++i)
+    for(unsigned int i = 0; i < len_; ++i)
     {
         data_[i] = 1;
     }
 }
 
 template<typename T>
-Matrix<T>::Matrix(const T* data, int rows, int columns): rows_(rows), columns_(columns)
+Matrix<T>::Matrix(const T* data, unsigned int rows, unsigned int columns): rows_(rows), columns_(columns)
 {
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     generator_ = std::mt19937(seed);
 
     len_ = rows*columns;
     data_ = new T[len_];
-    for(int i = 0; i < len_; ++i)
+    for(unsigned int i = 0; i < len_; ++i)
     {
         data_[i] = data[i];
     }
@@ -47,13 +47,13 @@ Matrix<T>::~Matrix()
 }
 
 template<typename T>
-int Matrix<T>::getRows() const
+unsigned int Matrix<T>::getRows() const
 {
     return rows_;
 }
 
 template<typename T>
-int Matrix<T>::getColumns() const
+unsigned int Matrix<T>::getColumns() const
 {
     return columns_;
 }
@@ -65,7 +65,7 @@ const T* Matrix<T>::getData() const
 }
 
 template<typename T>
-T Matrix<T>::get(int i, int j) const
+T Matrix<T>::get(unsigned int i, unsigned int j) const
 {
     if(i < 0 || i >= rows_ || j < 0 || j >= columns_)
     {
@@ -78,7 +78,7 @@ T Matrix<T>::get(int i, int j) const
 template<typename T>
 void Matrix<T>::zero()
 {
-    for(int i = 0; i < len_; ++i)
+    for(unsigned int i = 0; i < len_; ++i)
     {
         data_[i] = 0;
     }
@@ -90,7 +90,7 @@ void Matrix<T>::randomize(T min, T max)
     if constexpr(std::is_integral<T>::value)
     {
         std::uniform_int_distribution<T> distribution(min, max);
-        for(int i = 0; i < len_; ++i)
+        for(unsigned int i = 0; i < len_; ++i)
         {
             data_[i] = distribution(generator_);
         }
@@ -98,7 +98,7 @@ void Matrix<T>::randomize(T min, T max)
     else if constexpr(std::is_floating_point<T>::value)
     {
         std::uniform_real_distribution<T> distribution(min, max);
-        for(int i = 0; i < len_; ++i)
+        for(unsigned int i = 0; i < len_; ++i)
         {
             data_[i] = distribution(generator_);
         }
@@ -109,7 +109,7 @@ template<typename T>
 Matrix<T> Matrix<T>::map(std::function<T(T)> const& f) const
 {
     Matrix result(rows_, columns_);
-    for(int i = 0; i < len_; ++i)
+    for(unsigned int i = 0; i < len_; ++i)
     {
         result.data_[i] = f(data_[i]);
         if(std::isinf(result.data_[i]) || std::isnan(result.data_[i]))
@@ -124,7 +124,7 @@ template<typename T>
 T Matrix<T>::sum() const
 {
     T sum = 0;
-    for(int i = 0; i < len_; ++i)
+    for(unsigned int i = 0; i < len_; ++i)
     {
         sum += data_[i];
     }
@@ -140,7 +140,7 @@ Matrix<T> Matrix<T>::hadamard(const Matrix<T>& o) const
         return *this;
     }
     Matrix result(rows_, columns_);
-    for(int i = 0; i < len_; ++i)
+    for(unsigned int i = 0; i < len_; ++i)
     {
         result.data_[i] = data_[i]*o.data_[i];
     }
@@ -152,9 +152,9 @@ Matrix<T> Matrix<T>::transpose(const Matrix<T>& m)
 {
     //inverted on purpose
     Matrix result(m.columns_, m.rows_);
-    for(int i = 0; i < m.columns_; ++i)
+    for(unsigned int i = 0; i < m.columns_; ++i)
     {
-        for(int j = 0; j < m.rows_; ++j)
+        for(unsigned int j = 0; j < m.rows_; ++j)
         {
             result.data_[result.at(i, j)] = m.data_[m.at(j, i)];
         }
@@ -171,7 +171,7 @@ Matrix<T>& Matrix<T>::operator=(const Matrix& o)
     len_ = o.len_;
     data_ = new T[len_];
 
-    for(int i = 0; i < len_; ++i)
+    for(unsigned int i = 0; i < len_; ++i)
     {
         data_[i] = o.data_[i];
     }
@@ -206,7 +206,7 @@ Matrix<T> Matrix<T>::operator+(const Matrix& o) const
         return *this;
     }
     Matrix result(rows_, columns_);
-    for(int i = 0; i < len_; ++i)
+    for(unsigned int i = 0; i < len_; ++i)
     {
         result.data_[i] = data_[i] + o.data_[i];
     }
@@ -221,7 +221,7 @@ Matrix<T>& Matrix<T>::operator+=(const Matrix& o)
         std::cout << "ERROR: Cannot perform addition of matrices with different sizes!\n";
         return *this;
     }
-    for(int i = 0; i < len_; ++i)
+    for(unsigned int i = 0; i < len_; ++i)
     {
         data_[i] += o.data_[i];
     }
@@ -237,7 +237,7 @@ Matrix<T> Matrix<T>::operator-(const Matrix& o) const
         return *this;
     }
     Matrix result(rows_, columns_);
-    for(int i = 0; i < len_; ++i)
+    for(unsigned int i = 0; i < len_; ++i)
     {
         result.data_[i] = data_[i] - o.data_[i];
     }
@@ -252,7 +252,7 @@ Matrix<T>& Matrix<T>::operator-=(const Matrix& o)
         std::cout << "ERROR: Cannot perform addition of matrices with different sizes!\n";
         return *this;
     }
-    for(int i = 0; i < len_; ++i)
+    for(unsigned int i = 0; i < len_; ++i)
     {
         data_[i] -= o.data_[i];
     }
@@ -263,7 +263,7 @@ template<typename T>
 Matrix<T> Matrix<T>::operator*(T f) const
 {
     Matrix result(rows_, columns_);
-    for(int i = 0; i < len_; ++i)
+    for(unsigned int i = 0; i < len_; ++i)
     {
         result.data_[i] = data_[i]*f;
     }
@@ -273,7 +273,7 @@ Matrix<T> Matrix<T>::operator*(T f) const
 template<typename T>
 Matrix<T>& Matrix<T>::operator*=(T f)
 {
-    for(int i = 0; i < len_; ++i)
+    for(unsigned int i = 0; i < len_; ++i)
     {
         data_[i] *= f;
     }
@@ -290,12 +290,12 @@ Matrix<T> Matrix<T>::operator*(const Matrix& o) const
     }
     Matrix result(rows_, o.columns_);
     T s;
-    for(int i = 0; i < rows_; ++i)
+    for(unsigned int i = 0; i < rows_; ++i)
     {
-        for(int j = 0; j < o.columns_; ++j)
+        for(unsigned int j = 0; j < o.columns_; ++j)
         {
             s = 0;
-            for(int r = 0; r < columns_; ++r)
+            for(unsigned int r = 0; r < columns_; ++r)
             {
                 s += data_[at(i, r)]*o.data_[o.at(r, j)];
             }

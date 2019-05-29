@@ -8,11 +8,16 @@
 #include "data_load_failure.h"
 #include "layer.h"
 
-NeuralNetwork::NeuralNetwork(int inputNodes, float learningRate): 
+NeuralNetwork::NeuralNetwork(unsigned int inputNodes, float learningRate): 
     inputNodes_(inputNodes),
     outputNodes_(inputNodes),
     learningRate_(learningRate)
 {}
+
+unsigned int NeuralNetwork::getLayersCount() const
+{
+    return layers_.size();
+}
 
 NNMatrixType NeuralNetwork::feedforward(const NNMatrixType& input) const
 {
@@ -31,14 +36,14 @@ NNMatrixType NeuralNetwork::feedforward(const NNMatrixType& input) const
     return result;
 }
 
-void NeuralNetwork::train(int epochs, 
-                          int batchSize, 
+void NeuralNetwork::train(unsigned int epochs, 
+                          unsigned int batchSize, 
                           const std::vector<std::shared_ptr<NNMatrixType>>& inputs, 
                           const std::vector<std::shared_ptr<NNMatrixType>>& targets)
 {
-    int trainingSize = inputs.size();
-    std::vector<int> permutaionTable(trainingSize);
-    for(int i = 0; i < trainingSize; ++i)
+    size_t trainingSize = inputs.size();
+    std::vector<unsigned int> permutaionTable(trainingSize);
+    for(size_t i = 0; i < trainingSize; ++i)
     {
         permutaionTable[i] = i;
     }
@@ -46,22 +51,22 @@ void NeuralNetwork::train(int epochs,
     int seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::mt19937 generator(seed);
 
-    int numBatches = std::ceil((float)trainingSize / batchSize);
+    unsigned int numBatches = std::ceil((float)trainingSize / batchSize);
 
     NNMatrixType input;
     NNMatrixType target;
 
-    for(int epoch = 0; epoch < epochs; ++epoch)
+    for(unsigned int epoch = 0; epoch < epochs; ++epoch)
     {
         std::cout << "Epoch " << epoch + 1 << " out of " << epochs << "\n";
         std::shuffle(permutaionTable.begin(), permutaionTable.end(), generator);
-        for(int n = 0; n < numBatches; ++n)
+        for(unsigned int n = 0; n < numBatches; ++n)
         {
-            int startIdx = n*batchSize;
+            unsigned int startIdx = n*batchSize;
 
-            for(int i = 0; i < batchSize; ++i)
+            for(unsigned int i = 0; i < batchSize; ++i)
             {
-                int idx = startIdx + i;
+                unsigned int idx = startIdx + i;
                 if(idx >= trainingSize) break;
 
                 input = *inputs[permutaionTable[idx]];
@@ -92,7 +97,7 @@ void NeuralNetwork::train(int epochs,
 
                 NNMatrixType error = output - target;
 
-                int backpropIdx = layers_.size() - 1;
+                unsigned int backpropIdx = layers_.size() - 1;
                 for(auto it = layers_.rbegin(); it < layers_.rend() - 1; ++it)
                 {
                     error = (*it)->backpropagate(error, weightedInputs[backpropIdx], outputs[backpropIdx - 1]);
@@ -122,10 +127,10 @@ float NeuralNetwork::test(const std::vector<std::shared_ptr<NNMatrixType>>& inpu
     {
         result = feedforward(*inputs[n]);
 
-        int predictedLabel = 0;
+        unsigned int predictedLabel = 0;
         float currentValue = result.get(0, 0);
         float maxValue = currentValue;
-        for(int i = 0; i < result.getRows(); ++i)
+        for(unsigned int i = 0; i < result.getRows(); ++i)
         {
             currentValue = result.get(i, 0);
             if(currentValue > maxValue)
@@ -135,10 +140,10 @@ float NeuralNetwork::test(const std::vector<std::shared_ptr<NNMatrixType>>& inpu
             }
         }
 
-        int expectedLabel = 0;
+        unsigned int expectedLabel = 0;
         currentValue = targets[n]->get(0, 0);
         maxValue = currentValue;
-        for(int i = 0; i < result.getRows(); ++i)
+        for(unsigned int i = 0; i < result.getRows(); ++i)
         {
             currentValue = targets[n]->get(i, 0);
             if(currentValue > maxValue)

@@ -10,18 +10,18 @@ template<typename T>
 class Matrix
 {
 public:
-    Matrix(int rows, int columns);
+    Matrix(unsigned int rows, unsigned int columns);
     explicit Matrix(): Matrix(1, 1) {}
-    Matrix(const T* data, int rows, int columns);
+    Matrix(const T* data, unsigned int rows, unsigned int columns);
     Matrix(const Matrix& o): Matrix(o.data_, o.rows_, o.columns_) {}
     Matrix(Matrix&& o);
 
     ~Matrix();
 
-    int getRows() const;
-    int getColumns() const;
+    unsigned int getRows() const;
+    unsigned int getColumns() const;
     const T* getData() const;
-    T get(int i, int j) const;
+    T get(unsigned int i, unsigned int j) const;
 
     void zero();
     void randomize(T min, T max);
@@ -47,10 +47,10 @@ public:
     }
     friend std::ostream& operator<<(std::ostream& os, const Matrix& m)
     {
-        for(int i = 0, k = 0; i < m.rows_; ++i)
+        for(unsigned int i = 0, k = 0; i < m.rows_; ++i)
         {
             os << "[";
-            for(int j = 0; j < m.columns_; ++j, ++k)
+            for(unsigned int j = 0; j < m.columns_; ++j, ++k)
             {
                 os << m.data_[k];
                 if(j + 1 < m.columns_) os << "\t";
@@ -61,13 +61,13 @@ public:
         return os;
     }
 private:
-    int rows_;
-    int columns_;
-    int len_;
+    unsigned int rows_;
+    unsigned int columns_;
+    unsigned int len_;
     std::mt19937 generator_;
     T* data_;
 
-    int at(int i, int j) const
+    unsigned int at(unsigned int i, unsigned int j) const
     {
         return i*columns_ + j;
     }

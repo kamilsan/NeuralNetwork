@@ -7,8 +7,9 @@
 
 int main()
 {
-    //UserInterface::handleInteraction();
+    UserInterface::handleInteraction();
 
+    /*
     MNISTData* data = MNISTDataLoader::loadData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", 
                                              "data/t10k-images.idx3-ubyte", "data/t10k-labels.idx1-ubyte");
 
@@ -22,7 +23,7 @@ int main()
     float acc = nn.test(data->getTestingData(), data->getTestingLabels());
     std::cout << "Acc: " << acc << "\n";
 
-    delete data;
+    delete data;*/
 
     return 0;
 }

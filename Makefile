@@ -2,10 +2,10 @@ CC=g++
 CFLAGS= -std=c++17 -O3 -Wall -pedantic
 CINCL= -I./include
 
-program: main.o neuralnetwork.o layer.o reluLayer.o sigmoidLayer.o mnistDataLoader.o userInterface.o image.o
+program: main.o neuralnetwork.o layer.o reluLayer.o sigmoidLayer.o mnistDataLoader.o userInterface.o image.o matrix.h matrix.tpp
 	${CC} ${CFLAGS} main.o neuralnetwork.o layer.o reluLayer.o sigmoidLayer.o mnistDataLoader.o userInterface.o image.o -o program
 
-tests: tests.o neuralnetwork.o layer.o reluLayer.o sigmoidLayer.o mnistDataLoader.o userInterface.o image.o
+tests: tests.o neuralnetwork.o layer.o reluLayer.o sigmoidLayer.o mnistDataLoader.o userInterface.o image.o matrix.h matrix.tpp
 	${CC} ${CFLAGS} tests.o neuralnetwork.o layer.o reluLayer.o sigmoidLayer.o mnistDataLoader.o userInterface.o image.o -o tests
 
 tests.o: tests.cpp
