@@ -10,27 +10,25 @@
 
 NeuralNetwork::NeuralNetwork(int inputNodes, float learningRate): 
     inputNodes_(inputNodes),
+    outputNodes_(inputNodes),
     learningRate_(learningRate)
 {}
 
-void NeuralNetwork::addLayer(const std::shared_ptr<Layer>& layer)
-{
-    layers_.push_back(std::move(layer));
-}
-
-void NeuralNetwork::feedforward(const NNMatrixType& input, NNMatrixType& result) const
+NNMatrixType NeuralNetwork::feedforward(const NNMatrixType& input) const
 {
     if(input.getRows() != inputNodes_ || input.getColumns() != 1)
     {
         std::cout << "ERROR: passed input matrix has wrong dimensions!\n";
-        return;
+        return NNMatrixType();
     }
 
-    result = input;
+    NNMatrixType result = input;
     for(auto it = layers_.begin(); it < layers_.end(); ++it)
     {
         result = (*it)->feedforward(result);
     }
+
+    return result;
 }
 
 void NeuralNetwork::train(int epochs, 
@@ -122,7 +120,7 @@ float NeuralNetwork::test(const std::vector<std::shared_ptr<NNMatrixType>>& inpu
     unsigned predictions = inputs.size();
     for(size_t n = 0; n < predictions; ++n)
     {
-        feedforward(*inputs[n], result);
+        result = feedforward(*inputs[n]);
 
         int predictedLabel = 0;
         float currentValue = result.get(0, 0);

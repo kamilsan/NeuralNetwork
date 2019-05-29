@@ -106,7 +106,7 @@ void Matrix<T>::randomize(T min, T max)
 }
 
 template<typename T>
-Matrix<T> Matrix<T>::map(T (*f)(T)) const
+Matrix<T> Matrix<T>::map(std::function<T(T)> const& f) const
 {
     Matrix result(rows_, columns_);
     for(int i = 0; i < len_; ++i)

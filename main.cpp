@@ -13,8 +13,8 @@ int main()
                                              "data/t10k-images.idx3-ubyte", "data/t10k-labels.idx1-ubyte");
 
     NeuralNetwork nn = NeuralNetwork(784, 0.03);
-    nn.addLayer(std::make_shared<ReLULayer>(300, 784));
-    nn.addLayer(std::make_shared<SigmoidLayer>(10, 300));
+    nn.addLayer<ReLULayer>(300);
+    nn.addLayer<SigmoidLayer>(10);
 
 
     nn.train(1, 32, data->getTrainingData(), data->getTrainingLabels());

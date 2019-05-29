@@ -254,8 +254,7 @@ void UserInterface::handleDigitRecognition(NeuralNetwork* &nn)
     }
 
     NNMatrixType inputMatrix = NNMatrixType(matrixData, IMAGE_PIXELS, 1);
-    NNMatrixType resultMatrix;
-    nn->feedforward(inputMatrix, resultMatrix);
+    NNMatrixType resultMatrix = nn->feedforward(inputMatrix);
 
     int predictedLabel = 0;
     float max = resultMatrix.get(0, 0);

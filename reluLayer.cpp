@@ -1,47 +1,13 @@
 #include "reluLayer.h"
 
-ReLULayer::ReLULayer(unsigned int nodes, unsigned int prevNodes)
+NNDataType ReLULayer::activationFunction(NNDataType value) const
 {
-    weights_ = NNMatrixType(nodes, prevNodes);
-    bias_ = NNMatrixType(nodes, 1);
-
-    float r = 4.0*std::sqrt(6.0/(nodes + prevNodes));
-    weights_.randomize(-r, r);
-
-    bias_.zero();
-
-    nablaW_ = NNMatrixType(nodes, prevNodes);
-    nablaB_ = NNMatrixType(nodes, 1);
-
-    nablaW_.zero();
-    nablaB_.zero();
+    if(value < 0.0f) return 0.0f;
+    else return value;
 }
 
-NNMatrixType ReLULayer::feedforward(const NNMatrixType& input) const
+NNDataType ReLULayer::activationDerivative(NNDataType value) const
 {
-    NNMatrixType weightedInput = calculateWeightedInput(input);
-    return weightedInput.map(relu);
-}
-
-NNMatrixType ReLULayer::feedforward(const NNMatrixType& input, 
-                                    NNMatrixType& weightedInput)
-{
-    weightedInput = calculateWeightedInput(input);
-    return weightedInput.map(relu);
-}
-
-NNMatrixType ReLULayer::backpropagate(const NNMatrixType& error,
-                                       const NNMatrixType& weightedInput,
-                                       const NNMatrixType& prevOutput)
-{
-    NNMatrixType delta = error.hadamard(weightedInput.map(drelu));
-    NNMatrixType nablaW = delta * NNMatrixType::transpose(prevOutput);
-
-    NNMatrixType output = NNMatrixType::transpose(weights_) * delta;
-
-
-    nablaW_ += nablaW;
-    nablaB_ += delta;
-
-    return output;
+    if(value < 0.0f) return 0.0f;
+    else return 1.0f;
 }

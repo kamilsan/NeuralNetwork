@@ -9,16 +9,18 @@
 
 class Layer;
 
-typedef Matrix<float> NNMatrixType;
+typedef float NNDataType;
+typedef Matrix<NNDataType> NNMatrixType;
 
 class NeuralNetwork
 {
 public:
     NeuralNetwork(int inputNodes, float learningRate);
 
-    void addLayer(const std::shared_ptr<Layer>& layer);
+    template<typename T>
+    void addLayer(int nodes);
 
-    void feedforward(const NNMatrixType& input, NNMatrixType &result) const;
+    NNMatrixType feedforward(const NNMatrixType& input) const;
     void train(int epochs, 
                 int batchSize, 
                 const std::vector<std::shared_ptr<NNMatrixType>>& inputs, 
@@ -29,6 +31,14 @@ public:
     static NeuralNetwork* load(const char* filename);
 private:
     int inputNodes_;
+    int outputNodes_;
     float learningRate_;
     std::vector<std::shared_ptr<Layer>> layers_;
 };
+
+template<typename T>
+void NeuralNetwork::addLayer(int nodes)
+{
+    layers_.push_back(std::make_shared<T>(nodes, outputNodes_));
+    outputNodes_ = nodes;
+}

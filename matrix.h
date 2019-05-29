@@ -4,6 +4,7 @@
 #include <random>
 #include <chrono>
 #include <type_traits>
+#include <functional>
 
 template<typename T>
 class Matrix
@@ -24,7 +25,7 @@ public:
 
     void zero();
     void randomize(T min, T max);
-    Matrix map(T (*f)(T)) const;
+    Matrix map(std::function<T(T)> const& f) const;
     T sum() const;
     Matrix hadamard(const Matrix& o) const;
     Matrix static transpose(const Matrix& m);
