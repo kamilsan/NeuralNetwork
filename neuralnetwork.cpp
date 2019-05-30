@@ -6,12 +6,17 @@
 
 #include "neuralnetwork.h"
 #include "data_load_failure.h"
-#include "layer.h"
+#include "sigmoidLayer.h"
+#include "reluLayer.h"
+#include "costFunctionStrategy.h"
+#include "meanSquereErrorCost.h"
+#include "crossEntropyCost.h"
 
-NeuralNetwork::NeuralNetwork(unsigned int inputNodes, float learningRate): 
+NeuralNetwork::NeuralNetwork(unsigned int inputNodes, float learningRate, std::unique_ptr<CostFunctionStrategy> costFunction): 
     inputNodes_(inputNodes),
     outputNodes_(inputNodes),
-    learningRate_(learningRate)
+    learningRate_(learningRate),
+    costFunction_(std::move(costFunction))
 {}
 
 unsigned int NeuralNetwork::getLayersCount() const
@@ -41,6 +46,7 @@ void NeuralNetwork::train(unsigned int epochs,
                           const std::vector<std::shared_ptr<NNMatrixType>>& inputs, 
                           const std::vector<std::shared_ptr<NNMatrixType>>& targets)
 {
+    //Prepare permutation table for training data shuffle
     size_t trainingSize = inputs.size();
     std::vector<unsigned int> permutaionTable(trainingSize);
     for(size_t i = 0; i < trainingSize; ++i)
@@ -48,6 +54,7 @@ void NeuralNetwork::train(unsigned int epochs,
         permutaionTable[i] = i;
     }
 
+    //Initialize PRNG
     int seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::mt19937 generator(seed);
 
@@ -62,6 +69,7 @@ void NeuralNetwork::train(unsigned int epochs,
         std::shuffle(permutaionTable.begin(), permutaionTable.end(), generator);
         for(unsigned int n = 0; n < numBatches; ++n)
         {
+            //Train on single batch
             unsigned int startIdx = n*batchSize;
 
             for(unsigned int i = 0; i < batchSize; ++i)
@@ -78,43 +86,49 @@ void NeuralNetwork::train(unsigned int epochs,
                     return;
                 }
 
-                //forward pass
-                NNMatrixType output = input;
-                //Vectors storing results of layers' calculations
-                //used in backpropagation
-                std::vector<NNMatrixType> weightedInputs;
-                std::vector<NNMatrixType> outputs;
-                weightedInputs.reserve(layers_.size());
-                outputs.reserve(layers_.size());
-
-                for(auto it = layers_.begin(); it < layers_.end(); ++it)
-                {
-                    NNMatrixType weightedInput;
-                    output = (*it)->feedforward(output, weightedInput);
-                    weightedInputs.emplace_back(weightedInput);
-                    outputs.emplace_back(output);
-                }
-
-                NNMatrixType error = output - target;
-
-                unsigned int backpropIdx = layers_.size() - 1;
-                for(auto it = layers_.rbegin(); it < layers_.rend() - 1; ++it)
-                {
-                    error = (*it)->backpropagate(error, weightedInputs[backpropIdx], outputs[backpropIdx - 1]);
-                    backpropIdx--;
-                }
-
-                //Handle first layer differently - pass input instead of last layer's output
-                error = layers_[0]->backpropagate(error, weightedInputs[0], input);
+                singleInputTrain(input, target);
             }
             
-            //Adjust weights and biases
+            //Adjust weights and biases after finishing batch
             for(auto it = layers_.begin(); it < layers_.end(); ++it)
             {
                 (*it)->performSDGStep(learningRate_);
             }
         }
     }
+}
+
+void NeuralNetwork::singleInputTrain(const NNMatrixType& input, const NNMatrixType& target)
+{
+    //forward pass
+    NNMatrixType output = input;
+    //Vectors storing results of layers' calculations
+    //used in backpropagation
+    std::vector<NNMatrixType> weightedInputs;
+    std::vector<NNMatrixType> outputs;
+    weightedInputs.reserve(layers_.size());
+    outputs.reserve(layers_.size());
+
+    for(auto it = layers_.begin(); it < layers_.end(); ++it)
+    {
+        NNMatrixType weightedInput;
+        output = (*it)->feedforward(output, weightedInput);
+        weightedInputs.emplace_back(weightedInput);
+        outputs.emplace_back(output);
+    }
+
+    //dC/da
+    NNMatrixType costDerivative = costFunction_->calculateCostDerivative(output, target);
+
+    unsigned int backpropIdx = layers_.size() - 1;
+    for(auto it = layers_.rbegin(); it < layers_.rend() - 1; ++it)
+    {
+        costDerivative = (*it)->backpropagate(costDerivative, weightedInputs[backpropIdx], outputs[backpropIdx - 1]);
+        backpropIdx--;
+    }
+
+    //Handle first layer differently - pass input instead of last layer's output
+    costDerivative = layers_[0]->backpropagate(costDerivative, weightedInputs[0], input);
 }
 
 float NeuralNetwork::test(const std::vector<std::shared_ptr<NNMatrixType>>& inputs, 
@@ -159,46 +173,35 @@ float NeuralNetwork::test(const std::vector<std::shared_ptr<NNMatrixType>>& inpu
     return 100.0f*correctPredictions/predictions;
 }
 
+void NeuralNetwork::addLayer(Layer* layer)
+{
+    layers_.emplace_back(std::unique_ptr<Layer>(layer));
+    outputNodes_ = layer->getNodesCount();
+}
+
 void NeuralNetwork::save(const char* filename) const
 {
-    //TODO
-    std::cout << "NOT IMPLEMENTED!\n";
-    /*
     std::ofstream ofile(filename, std::ios::binary);
 
     ofile.write((char*)&learningRate_, sizeof(learningRate_));
-    int data = weights_ih_.getRows();
-    ofile.write((char*)&data, sizeof(data));
-    data = weights_ih_.getColumns();
-    ofile.write((char*)&data, sizeof(data));
-    data = weights_ho_.getRows();
-    ofile.write((char*)&data, sizeof(data));
-    data = weights_ho_.getColumns();
-    ofile.write((char*)&data, sizeof(data));
+    ofile.write((char*)&inputNodes_, sizeof(inputNodes_));
+    ofile.write((char*)&outputNodes_, sizeof(outputNodes_));
+    
+    costFunction_->serialize(ofile);
 
-    int len = weights_ih_.getRows()*weights_ih_.getColumns();
-    ofile.write((char*)weights_ih_.getData(), len*sizeof(float));
+    unsigned int layersCount = getLayersCount();
+    ofile.write((char*)&layersCount, sizeof(layersCount));
 
-    len = bias_h_.getRows()*bias_h_.getColumns();
-    ofile.write((char*)bias_h_.getData(), len*sizeof(float));
-
-    len = weights_ho_.getRows()*weights_ho_.getColumns();
-    ofile.write((char*)weights_ho_.getData(), len*sizeof(float));
-
-    len = bias_o_.getRows()*bias_o_.getColumns();
-    ofile.write((char*)bias_o_.getData(), len*sizeof(float));
+    for(auto it = layers_.begin(); it < layers_.end(); ++it)
+    {
+        (*it)->serialize(ofile);
+    }
 
     ofile.close();
-    */
 }
 
 NeuralNetwork* NeuralNetwork::load(const char* filename)
 {
-    //TODO
-    std::cout << "NOT IMPLEMENTED!\n";
-    return nullptr;
-    
-    /*
     std::ifstream ifile(filename, std::ios::binary);
 
     if(!ifile.is_open())
@@ -206,43 +209,89 @@ NeuralNetwork* NeuralNetwork::load(const char* filename)
         throw data_load_failure(filename);
     }
 
+    //Loading basic info
     float learingRate;
-    int weights_ih_rows, weights_ih_columns, weights_ho_rows, weights_ho_columns;
-
-    ifile.read((char*)&learingRate, sizeof(float));
-    ifile.read((char*)&weights_ih_rows, sizeof(int));
-    ifile.read((char*)&weights_ih_columns, sizeof(int));
-    ifile.read((char*)&weights_ho_rows, sizeof(int));
-    ifile.read((char*)&weights_ho_columns, sizeof(int));
-
-    int len = weights_ih_rows*weights_ih_columns;
-    float* weights_ih_buffer = new float[len];
-    ifile.read((char*)weights_ih_buffer, len*sizeof(float));
-
-    len = weights_ih_rows;
-    float* bias_h_buffer = new float[len];
-    ifile.read((char*)bias_h_buffer, len*sizeof(float));
-
-    len = weights_ho_rows*weights_ho_columns;
-    float* weights_ho_buffer = new float[len];
-    ifile.read((char*)weights_ho_buffer, len*sizeof(float));
-
-    len = weights_ho_rows;
-    float* bias_o_buffer = new float[len];
-    ifile.read((char*)bias_o_buffer, len*sizeof(float));
+    unsigned int inputNodes, outputNodes;
     
+    ifile.read((char*)&learingRate, sizeof(learingRate));
+    ifile.read((char*)&inputNodes, sizeof(inputNodes));
+    ifile.read((char*)&outputNodes, sizeof(outputNodes));
+
+    //Cost function
+    unsigned int idLen;
+    ifile.read((char*)&idLen, sizeof(idLen));
+
+    char* id = new char[idLen];
+    ifile.read(id, idLen*sizeof(char));
+
+    //do not delete this!
+    CostFunctionStrategy* costFunction = nullptr;
+
+    if(id[0] == 'M' && id[1] == 'S' && id[2] == 'E')
+    {
+        costFunction = new MeanSquereErrorCost();
+    }
+    else if(id[0] == 'C' && id[1] == 'E' && id[2] == 'X')
+    {
+        costFunction = new CrossEntropyCost();
+    }
+    else
+    {
+        delete[] id;
+        throw data_load_failure(filename);
+    }
+    
+    NeuralNetwork* nn = new NeuralNetwork(inputNodes, learingRate, std::unique_ptr<CostFunctionStrategy>(costFunction));
+
+    //Layers
+    unsigned int layersCount;
+    ifile.read((char*)&layersCount, sizeof(layersCount));
+
+    for(unsigned int i = 0; i < layersCount; ++i)
+    {
+        ifile.read((char*)&idLen, sizeof(idLen));
+        if(id) delete[] id;
+        id = new char[idLen];
+        ifile.read(id, idLen*sizeof(char));
+
+        unsigned int rows, columns;
+        ifile.read((char*)&rows, sizeof(rows));
+        ifile.read((char*)&columns, sizeof(columns));
+
+        //this resource cannot be deleted!
+        Layer* layer = nullptr;
+
+        if(id[0] == 'S' && id[1] == 'I' && id[2] == 'G')
+        {
+            layer = new SigmoidLayer(rows, columns);
+        }
+        else if(id[0] == 'R' && id[1] == 'E' && id[2] == 'L')
+        {
+            layer = new ReLULayer(rows, columns);
+        }
+
+        unsigned int len = rows*columns;
+        NNDataType* bufferWeights = new NNDataType[len];
+        ifile.read((char*)bufferWeights, len*sizeof(NNDataType));
+
+        NNDataType* bufferBias = new NNDataType[rows];
+        ifile.read((char*)bufferBias, rows*sizeof(NNDataType));
+
+        NNMatrixType weights = NNMatrixType(bufferWeights, rows, columns);
+        NNMatrixType bias = NNMatrixType(bufferBias, rows, 1);
+
+        delete[] bufferWeights;
+        delete[] bufferBias;
+
+        layer->weights_ = weights;
+        layer->bias_ = bias;
+
+        nn->addLayer(layer);
+    }
+
+    if(id) delete[] id;
+
     ifile.close();
 
-    NNMatrixType weights_ih = NNMatrixType(weights_ih_buffer, weights_ih_rows, weights_ih_columns);
-    NNMatrixType bias_h = NNMatrixType(bias_h_buffer, weights_ih_rows, 1);
-    NNMatrixType weights_ho = NNMatrixType(weights_ho_buffer, weights_ho_rows, weights_ho_columns);
-    NNMatrixType bias_o = NNMatrixType(bias_o_buffer, weights_ho_rows, 1);
-    
-    delete[] weights_ih_buffer;
-    delete[] bias_h_buffer;
-    delete[] weights_ho_buffer;
-    delete[] bias_o_buffer;
-
-    return new NeuralNetwork(weights_ih, bias_h, weights_ho, bias_o, learingRate);
-    */
+    return nn;
 }

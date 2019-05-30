@@ -4,6 +4,8 @@
 
 Layer::Layer(unsigned int nodes, unsigned int prevNodes)
 {
+    nodes_ = nodes;
+    
     weights_ = NNMatrixType(nodes, prevNodes);
     bias_ = NNMatrixType(nodes, 1);
 
@@ -16,6 +18,7 @@ Layer::Layer(unsigned int nodes, unsigned int prevNodes)
     nablaW_ = NNMatrixType(nodes, prevNodes);
     nablaB_ = NNMatrixType(nodes, 1);
 
+    //start with zero gradient - it will be accumulated during backprop and added later
     nablaW_.zero();
     nablaB_.zero();
 }
@@ -69,4 +72,16 @@ void Layer::performSDGStep(float learningRate)
     //Reset gradient values (for next batch)
     nablaW_.zero();
     nablaB_.zero();
+}
+
+void Layer::serializeMatricies(std::ofstream& ofile) const
+{
+    auto rows = weights_.getRows();
+    auto columns = weights_.getColumns();
+    auto len = rows*columns;
+    
+    ofile.write((char*)&rows, sizeof(rows));
+    ofile.write((char*)&columns, sizeof(columns));
+    ofile.write((char*)weights_.getData(), len*sizeof(NNDataType));
+    ofile.write((char*)bias_.getData(), rows*sizeof(NNDataType));
 }

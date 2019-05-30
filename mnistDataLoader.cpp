@@ -7,6 +7,7 @@ typedef std::vector<std::shared_ptr<NNMatrixType>> MatrixVec;
 
 int MNISTDataLoader::reverseInt(int number)
 {
+    //divides int into 4 chanks and concats them in reversed order
     unsigned char c1, c2, c3, c4;
     c1 = number & 255;
     c2 = (number >> 8) & 255;
@@ -142,6 +143,7 @@ void MNISTDataLoader::createMatriciesFromRawData(const std::vector<char*> &image
         }
         imagesMatricies.push_back(std::make_shared<NNMatrixType>(imageMatrixData, imagePixels, 1));
         
+        //convert from label to matrix by setting matrix entry to 1 in specific place
         int label = +labels[i];
         for(int n = 0; n < POSSIBLE_LABELS; ++n)
         {

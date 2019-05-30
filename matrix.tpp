@@ -156,7 +156,7 @@ Matrix<T> Matrix<T>::transpose(const Matrix<T>& m)
     {
         for(unsigned int j = 0; j < m.rows_; ++j)
         {
-            result.data_[result.at(i, j)] = m.data_[m.at(j, i)];
+            result.data_[result.at(i, j)] = m.data_[m.at(j, i)];//here also
         }
     }
     return result;

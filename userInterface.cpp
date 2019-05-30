@@ -2,6 +2,7 @@
 #include <limits>
 #include <exception>
 #include <chrono>
+#include <memory>
 
 #include "userInterface.h"
 #include "mnistDataLoader.h"
@@ -9,6 +10,8 @@
 #include "image.h"
 #include "reluLayer.h"
 #include "sigmoidLayer.h"
+#include "meanSquereErrorCost.h"
+#include "crossEntropyCost.h"
 
 void UserInterface::clearInputBuffer()
 {
@@ -24,6 +27,7 @@ void UserInterface::printAsciiImage(const char* image)
     {
         for(unsigned int x = 0; x < IMG_SIZE; ++x, k+=3)
         {
+            //if pixel is bright enough
             if((unsigned char)image[k] > 127)
             {
                 std::cout << "X";
@@ -39,26 +43,29 @@ void UserInterface::handleInteraction()
     NeuralNetwork* nn = nullptr;
     MNISTData* mnistData = nullptr;
 
+    //handles states in loop
+    //it's a finite-state automaton
     State state = State::ModelNotLoaded;
+    unsigned int outputNodes = 0;
 
     while(state != State::Exit)
     {
-        handleCurrentState(mnistData, nn, state);
+        handleCurrentState(mnistData, nn, state, outputNodes);
     }
 
     if(mnistData != nullptr) delete mnistData;
     if(nn != nullptr) delete nn;
 }
 
-void UserInterface::handleCurrentState(MNISTData* &data, NeuralNetwork* &nn, State &state)
+void UserInterface::handleCurrentState(MNISTData* &data, NeuralNetwork* &nn, State &state, unsigned int& outputNodes)
 {
     switch(state)
     {
         case State::ModelNotLoaded:
-            handleStateModelNotLoaded(data, nn, state);
+            handleStateModelNotLoaded(data, nn, state, outputNodes);
             break;
         case State::LayersAddition:
-            handleStateLayersAddition(data, nn, state);
+            handleStateLayersAddition(data, nn, state, outputNodes);
             break;
         case State::ModelLoaded:
             handleStateModelLoaded(nn, state);
@@ -68,8 +75,10 @@ void UserInterface::handleCurrentState(MNISTData* &data, NeuralNetwork* &nn, Sta
     }
 }
 
-void UserInterface::handleStateModelNotLoaded(MNISTData* &data, NeuralNetwork* &nn, State &state)
+void UserInterface::handleStateModelNotLoaded(MNISTData* &data, NeuralNetwork* &nn, State &state, unsigned int& outputNodes)
 {
+    outputNodes = 0;
+
     int choice;
     do
     {
@@ -99,7 +108,7 @@ void UserInterface::handleStateModelNotLoaded(MNISTData* &data, NeuralNetwork* &
     }
 }
 
-void UserInterface::handleStateLayersAddition(const MNISTData* data, NeuralNetwork* nn, State &state)
+void UserInterface::handleStateLayersAddition(const MNISTData* data, NeuralNetwork* nn, State &state, unsigned int& outputNodes)
 {
     int choice;
     do
@@ -119,15 +128,20 @@ void UserInterface::handleStateLayersAddition(const MNISTData* data, NeuralNetwo
     switch(choice)
     {
         case 1:
-            addLayer<ReLULayer>(nn);
+            addLayer<ReLULayer>(nn, outputNodes);
             break;
         case 2:
-            addLayer<SigmoidLayer>(nn);
+            addLayer<SigmoidLayer>(nn, outputNodes);
             break;
         case 3:
             if(nn->getLayersCount() == 0)
             {
                 std::cout << "Please add at least one layer.\n\n";
+            }
+            else if(outputNodes != 10)
+            {
+                std::cout << "Last layer has to have 10 nodes!\n";
+                state = State::ModelNotLoaded;
             }
             else trainModel(data, nn, state);
             break;
@@ -135,7 +149,7 @@ void UserInterface::handleStateLayersAddition(const MNISTData* data, NeuralNetwo
 }
 
 template <typename T>
-void UserInterface::addLayer(NeuralNetwork* nn)
+void UserInterface::addLayer(NeuralNetwork* nn, unsigned int& outputNodes)
 {
     unsigned int nodes = 0;
     do
@@ -150,6 +164,7 @@ void UserInterface::addLayer(NeuralNetwork* nn)
     } while(nodes < 1);
 
     nn->addLayer<T>(nodes);
+    outputNodes = nodes;
     
     std::cout << "\n";
 }
@@ -176,6 +191,7 @@ void UserInterface::trainModel(const MNISTData* data, NeuralNetwork* nn, State &
     readIntFromUserInputAndVerify("Epochs: ", nEpochs, 1);
     readIntFromUserInputAndVerify("Batch size: ", batchSize, 1);
 
+    //train and measure time
     std::cout << "\nTraining...\n";
     auto timeStart = std::chrono::high_resolution_clock::now();
     nn->train(nEpochs, batchSize, data->getTrainingData(), data->getTrainingLabels());
@@ -279,7 +295,30 @@ void UserInterface::handleModelCreation(MNISTData* &data, NeuralNetwork* &nn, St
         }
     } while(learingRate <= 0);
 
-    nn = new NeuralNetwork(784, learingRate);
+    std::unique_ptr<CostFunctionStrategy> costFunction = nullptr;
+
+    unsigned int choice;
+    do
+    {
+        std::cout << "Choose one of the listed cost functions:\n";
+        std::cout << "1. mean squere error\n";
+        std::cout << "2. cross-entropy\n";
+        std::cout << ">>>";
+
+        std::cin >> choice;
+        if(!std::cin) clearInputBuffer();
+    } while(choice < 1 || choice > 2);
+
+    switch(choice)
+    {
+        case 1:
+            costFunction = std::make_unique<MeanSquereErrorCost>();
+            break;
+        case 2:
+            costFunction = std::make_unique<CrossEntropyCost>();
+    }
+
+    nn = new NeuralNetwork(784, learingRate, std::move(costFunction));
 
     state = State::LayersAddition;
 

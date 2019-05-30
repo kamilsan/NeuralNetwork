@@ -2,8 +2,11 @@
 
 #include "neuralnetwork.h"
 
+#include <fstream>
+
 class Layer
 {
+friend class NeuralNetwork;
 public:
     Layer(unsigned int nodes, unsigned int prevNodes);
 
@@ -29,9 +32,13 @@ public:
 
     //Nudges weights and biases in direction of steepest descent
     virtual void performSDGStep(float learingRate);
+
+    virtual void serialize(std::ofstream& ofile) const = 0;
 protected:
     //Return weights * input + bias. This value needs to be calculated in all layer types so this function is shared
     virtual NNMatrixType calculateWeightedInput(const NNMatrixType& input) const;
+
+    virtual void serializeMatricies(std::ofstream& ofile) const;
 
     unsigned int nodes_;
     

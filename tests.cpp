@@ -1,11 +1,15 @@
 #define CATCH_CONFIG_MAIN
 
 #include <catch2/catch.hpp>
+#include <memory>
 
 #include "matrix.h"
 #include "mnistDataLoader.h"
 #include "neuralnetwork.h"
 #include "userInterface.h"
+#include "reluLayer.h"
+#include "sigmoidLayer.h"
+#include "meanSquereErrorCost.h"
 
 TEST_CASE("matrix operations can be performed", "[matrix]") 
 {
@@ -78,20 +82,24 @@ TEST_CASE("matrix operations can be performed", "[matrix]")
 
 TEST_CASE("saving and loading neural network", "[nn]")
 {
-    //NeuralNetwork nn = NeuralNetwork(10, 20, 5, 0.1);
-    NeuralNetwork nn = NeuralNetwork(10, 0.1);
+    NeuralNetwork nn = NeuralNetwork(10, 0.1, std::make_unique<MeanSquereErrorCost>());
+    nn.addLayer<ReLULayer>(10);
+    nn.addLayer<SigmoidLayer>(20);
 
     float matrixData[] = {1, 2, 3, 1, 2, 3, 6, 3, 1, 2};
     NNMatrixType input(matrixData, 10, 1);
-    NNMatrixType result;
 
-    nn.feedforward(input, result);
+    NNMatrixType result = nn.feedforward(input);
 
     nn.save("nn_test.model");
 
     NeuralNetwork* nn2 = NeuralNetwork::load("nn_test.model");
-    NNMatrixType result2;
-    nn2->feedforward(input, result2);
+    if(nn2 == nullptr)
+    {
+        return;
+    }
+    
+    NNMatrixType result2 = nn2->feedforward(input);
 
     delete nn2;
 
