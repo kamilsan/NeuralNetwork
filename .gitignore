@@ -1,6 +1,8 @@
 .vscode/
-*.o
-program
-tests
+bin/
+CMakeFiles/
+*.cmake
+CMakeCache.txt
+Makefile
+
 *.model
-*.ppm
