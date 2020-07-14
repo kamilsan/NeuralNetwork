@@ -1,9 +1,9 @@
 #pragma once
 
 #include <cmath>
-#include <vector>
 #include <memory>
 #include <random>
+#include <vector>
 
 #include "matrix.h"
 
@@ -23,25 +23,25 @@ public:
     template<typename T>
     void addLayer(unsigned int nodes);
 
-    //Get output from neural net
+    // Get output from neural net
     NNMatrixType feedforward(const NNMatrixType& input) const;
 
-    //The name of the game
+    // The name of the game
     void train(unsigned int epochs, 
                 unsigned int batchSize, 
                 const std::vector<std::shared_ptr<NNMatrixType>>& inputs, 
                 const std::vector<std::shared_ptr<NNMatrixType>>& targets);
 
-    //Testing nn performance
+    // Testing nn performance
     float test(const std::vector<std::shared_ptr<NNMatrixType>>& inputs, 
                const std::vector<std::shared_ptr<NNMatrixType>>& targets) const;
 
-    //Serialization and deserialization
+    // Serialization and deserialization
     void save(const char* filename) const;
     static NeuralNetwork* load(const char* filename);
 private:
-    void singleInputTrain(const NNMatrixType& input, const NNMatrixType& target); //used in train
-    void addLayer(Layer* layer); //used in serialization
+    void singleInputTrain(const NNMatrixType& input, const NNMatrixType& target); // used in train
+    void addLayer(Layer* layer); // used in serialization
 
     unsigned int inputNodes_;
     unsigned int outputNodes_;

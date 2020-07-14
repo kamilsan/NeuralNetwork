@@ -1,7 +1,7 @@
 #include <fstream>
 
-#include "image.h"
 #include "data_load_failure.h"
+#include "image.h"
 
 Image::Image(const char* fileName)
 {

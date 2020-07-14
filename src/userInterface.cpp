@@ -1,17 +1,17 @@
+#include <chrono>
+#include <exception>
 #include <iostream>
 #include <limits>
-#include <exception>
-#include <chrono>
 #include <memory>
 
-#include "userInterface.h"
-#include "mnistDataLoader.h"
+#include "crossEntropyCost.h"
 #include "data_load_failure.h"
 #include "image.h"
+#include "meanSquereErrorCost.h"
+#include "mnistDataLoader.h"
 #include "reluLayer.h"
 #include "sigmoidLayer.h"
-#include "meanSquereErrorCost.h"
-#include "crossEntropyCost.h"
+#include "userInterface.h"
 
 void UserInterface::clearInputBuffer()
 {
@@ -27,7 +27,7 @@ void UserInterface::printAsciiImage(const char* image)
     {
         for(unsigned int x = 0; x < IMG_SIZE; ++x, k+=3)
         {
-            //if pixel is bright enough
+            // if pixel is bright enough
             if((unsigned char)image[k] > 127)
             {
                 std::cout << "X";
@@ -43,8 +43,8 @@ void UserInterface::handleInteraction()
     NeuralNetwork* nn = nullptr;
     MNISTData* mnistData = nullptr;
 
-    //handles states in loop
-    //it's a finite-state automaton
+    // handles states in loop
+    // it's a finite-state automaton
     State state = State::ModelNotLoaded;
     unsigned int outputNodes = 0;
 
@@ -191,7 +191,7 @@ void UserInterface::trainModel(const MNISTData* data, NeuralNetwork* nn, State &
     readIntFromUserInputAndVerify("Epochs: ", nEpochs, 1);
     readIntFromUserInputAndVerify("Batch size: ", batchSize, 1);
 
-    //train and measure time
+    // train and measure time
     std::cout << "\nTraining...\n";
     auto timeStart = std::chrono::high_resolution_clock::now();
     nn->train(nEpochs, batchSize, data->getTrainingData(), data->getTrainingLabels());

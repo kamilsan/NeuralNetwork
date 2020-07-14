@@ -15,7 +15,7 @@ NNDataType CrossEntropyCost::calculateCost(const NNMatrixType& output, const NNM
 
 NNMatrixType CrossEntropyCost::calculateCostDerivative(const NNMatrixType& output, const NNMatrixType& target) const
 {
-    //dc/da = (a-y)/(a(1-a))
+    // dc/da = (a-y)/(a(1-a))
     unsigned int rows = output.getRows();
     NNDataType* buffer = new NNDataType[rows];
 

@@ -1,16 +1,16 @@
-#include <iostream>
-#include <fstream>
-#include <memory>
 #include <algorithm>
 #include <chrono>
+#include <fstream>
+#include <iostream>
+#include <memory>
 
-#include "neuralnetwork.h"
-#include "data_load_failure.h"
-#include "sigmoidLayer.h"
-#include "reluLayer.h"
 #include "costFunctionStrategy.h"
-#include "meanSquereErrorCost.h"
 #include "crossEntropyCost.h"
+#include "data_load_failure.h"
+#include "meanSquereErrorCost.h"
+#include "neuralnetwork.h"
+#include "reluLayer.h"
+#include "sigmoidLayer.h"
 
 NeuralNetwork::NeuralNetwork(unsigned int inputNodes, float learningRate, std::unique_ptr<CostFunctionStrategy> costFunction): 
     inputNodes_(inputNodes),
@@ -46,7 +46,7 @@ void NeuralNetwork::train(unsigned int epochs,
                           const std::vector<std::shared_ptr<NNMatrixType>>& inputs, 
                           const std::vector<std::shared_ptr<NNMatrixType>>& targets)
 {
-    //Prepare permutation table for training data shuffle
+    // Prepare permutation table for training data shuffle
     size_t trainingSize = inputs.size();
     std::vector<unsigned int> permutaionTable(trainingSize);
     for(size_t i = 0; i < trainingSize; ++i)
@@ -54,7 +54,7 @@ void NeuralNetwork::train(unsigned int epochs,
         permutaionTable[i] = i;
     }
 
-    //Initialize PRNG
+    // Initialize PRNG
     int seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::mt19937 generator(seed);
 
@@ -69,7 +69,7 @@ void NeuralNetwork::train(unsigned int epochs,
         std::shuffle(permutaionTable.begin(), permutaionTable.end(), generator);
         for(unsigned int n = 0; n < numBatches; ++n)
         {
-            //Train on single batch
+            // Train on single batch
             unsigned int startIdx = n*batchSize;
 
             for(unsigned int i = 0; i < batchSize; ++i)
@@ -89,7 +89,7 @@ void NeuralNetwork::train(unsigned int epochs,
                 singleInputTrain(input, target);
             }
             
-            //Adjust weights and biases after finishing batch
+            // Adjust weights and biases after finishing batch
             for(auto it = layers_.begin(); it < layers_.end(); ++it)
             {
                 (*it)->performSDGStep(learningRate_);
@@ -100,10 +100,10 @@ void NeuralNetwork::train(unsigned int epochs,
 
 void NeuralNetwork::singleInputTrain(const NNMatrixType& input, const NNMatrixType& target)
 {
-    //forward pass
+    // forward pass
     NNMatrixType output = input;
-    //Vectors storing results of layers' calculations
-    //used in backpropagation
+    // Vectors storing results of layers' calculations
+    // used in backpropagation
     std::vector<NNMatrixType> weightedInputs;
     std::vector<NNMatrixType> outputs;
     weightedInputs.reserve(layers_.size());
@@ -117,7 +117,7 @@ void NeuralNetwork::singleInputTrain(const NNMatrixType& input, const NNMatrixTy
         outputs.emplace_back(output);
     }
 
-    //dC/da
+    // dC/da
     NNMatrixType costDerivative = costFunction_->calculateCostDerivative(output, target);
 
     unsigned int backpropIdx = layers_.size() - 1;
@@ -127,7 +127,7 @@ void NeuralNetwork::singleInputTrain(const NNMatrixType& input, const NNMatrixTy
         backpropIdx--;
     }
 
-    //Handle first layer differently - pass input instead of last layer's output
+    // Handle first layer differently - pass input instead of last layer's output
     costDerivative = layers_[0]->backpropagate(costDerivative, weightedInputs[0], input);
 }
 
@@ -209,7 +209,7 @@ NeuralNetwork* NeuralNetwork::load(const char* filename)
         throw data_load_failure(filename);
     }
 
-    //Loading basic info
+    // Loading basic info
     float learingRate;
     unsigned int inputNodes, outputNodes;
     
@@ -217,14 +217,14 @@ NeuralNetwork* NeuralNetwork::load(const char* filename)
     ifile.read((char*)&inputNodes, sizeof(inputNodes));
     ifile.read((char*)&outputNodes, sizeof(outputNodes));
 
-    //Cost function
+    // Cost function
     unsigned int idLen;
     ifile.read((char*)&idLen, sizeof(idLen));
 
     char* id = new char[idLen];
     ifile.read(id, idLen*sizeof(char));
 
-    //do not delete this!
+    // do not delete this!
     CostFunctionStrategy* costFunction = nullptr;
 
     if(id[0] == 'M' && id[1] == 'S' && id[2] == 'E')
@@ -243,7 +243,7 @@ NeuralNetwork* NeuralNetwork::load(const char* filename)
     
     NeuralNetwork* nn = new NeuralNetwork(inputNodes, learingRate, std::unique_ptr<CostFunctionStrategy>(costFunction));
 
-    //Layers
+    // Layers
     unsigned int layersCount;
     ifile.read((char*)&layersCount, sizeof(layersCount));
 
@@ -258,7 +258,7 @@ NeuralNetwork* NeuralNetwork::load(const char* filename)
         ifile.read((char*)&rows, sizeof(rows));
         ifile.read((char*)&columns, sizeof(columns));
 
-        //this resource cannot be deleted!
+        // this resource cannot be deleted!
         Layer* layer = nullptr;
 
         if(id[0] == 'S' && id[1] == 'I' && id[2] == 'G')

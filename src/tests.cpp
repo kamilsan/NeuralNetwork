@@ -4,12 +4,12 @@
 #include <memory>
 
 #include "matrix.h"
+#include "meanSquereErrorCost.h"
 #include "mnistDataLoader.h"
 #include "neuralnetwork.h"
-#include "userInterface.h"
 #include "reluLayer.h"
 #include "sigmoidLayer.h"
-#include "meanSquereErrorCost.h"
+#include "userInterface.h"
 
 TEST_CASE("matrix operations can be performed", "[matrix]") 
 {

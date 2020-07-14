@@ -9,7 +9,7 @@ Layer::Layer(unsigned int nodes, unsigned int prevNodes)
     weights_ = NNMatrixType(nodes, prevNodes);
     bias_ = NNMatrixType(nodes, 1);
 
-    //initializes weights is this way so as to the keep values reasonably small
+    // initializes weights is this way so as to the keep values reasonably small
     float r = 4.0*std::sqrt(6.0/(nodes + prevNodes));
     weights_.randomize(-r, r);
 
@@ -18,7 +18,7 @@ Layer::Layer(unsigned int nodes, unsigned int prevNodes)
     nablaW_ = NNMatrixType(nodes, prevNodes);
     nablaB_ = NNMatrixType(nodes, 1);
 
-    //start with zero gradient - it will be accumulated during backprop and added later
+    // start with zero gradient - it will be accumulated during backprop and added later
     nablaW_.zero();
     nablaB_.zero();
 }
@@ -44,15 +44,15 @@ NNMatrixType Layer::backpropagate(const NNMatrixType& error,
                                     const NNMatrixType& weightedInput,
                                     const NNMatrixType& prevOutput)
 {
-    //Calculates dC/dz = dC/da * da/dz, where da/dz is the derivative of the activation function
+    // Calculates dC/dz = dC/da * da/dz, where da/dz is the derivative of the activation function
     NNMatrixType delta = error.hadamard(weightedInput.map(std::bind(&Layer::activationDerivative, this, std::placeholders::_1)));
-    //dC/dw = dC/dz * dz/dw
+    // dC/dw = dC/dz * dz/dw
     NNMatrixType nablaW = delta * NNMatrixType::transpose(prevOutput);
 
-    //dC/da for the next layer
+    // dC/da for the next layer
     NNMatrixType output = NNMatrixType::transpose(weights_) * delta;
 
-    //Accumulate the gradients
+    // Accumulate the gradients
     nablaW_ += nablaW;
     nablaB_ += delta;
 
@@ -69,7 +69,7 @@ void Layer::performSDGStep(float learningRate)
     weights_ -= nablaW_ * learningRate;
     bias_ -= nablaB_ * learningRate;
 
-    //Reset gradient values (for next batch)
+    // Reset gradient values (for next batch)
     nablaW_.zero();
     nablaB_.zero();
 }
