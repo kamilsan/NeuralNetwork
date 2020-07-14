@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mnistData.h"
+#include "mnistData.hpp"
 
 class MNISTDataLoader
 {

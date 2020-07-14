@@ -13,17 +13,17 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set(PROJECT_CODE
-                                include/NeuralNetwork/matrix.h
-                                include/NeuralNetwork/costFunctionStrategy.h
-  src/crossEntropyCost.cpp     include/NeuralNetwork/crossEntropyCost.h
-  src/meanSquereErrorCost.cpp  include/NeuralNetwork/meanSquereErrorCost.h
-  src/image.cpp                include/NeuralNetwork/image.h
-  src/layer.cpp                include/NeuralNetwork/layer.h
-  src/mnistDataLoader.cpp      include/NeuralNetwork/mnistDataLoader.h
-  src/neuralnetwork.cpp        include/NeuralNetwork/neuralnetwork.h
-  src/reluLayer.cpp            include/NeuralNetwork/reluLayer.h
-  src/sigmoidLayer.cpp         include/NeuralNetwork/sigmoidLayer.h
-  src/userInterface.cpp        include/NeuralNetwork/userInterface.h)
+                                include/NeuralNetwork/matrix.hpp
+                                include/NeuralNetwork/costFunctionStrategy.hpp
+  src/crossEntropyCost.cpp     include/NeuralNetwork/crossEntropyCost.hpp
+  src/meanSquereErrorCost.cpp  include/NeuralNetwork/meanSquereErrorCost.hpp
+  src/image.cpp                include/NeuralNetwork/image.hpp
+  src/layer.cpp                include/NeuralNetwork/layer.hpp
+  src/mnistDataLoader.cpp      include/NeuralNetwork/mnistDataLoader.hpp
+  src/neuralnetwork.cpp        include/NeuralNetwork/neuralnetwork.hpp
+  src/reluLayer.cpp            include/NeuralNetwork/reluLayer.hpp
+  src/sigmoidLayer.cpp         include/NeuralNetwork/sigmoidLayer.hpp
+  src/userInterface.cpp        include/NeuralNetwork/userInterface.hpp)
 
 set(CATCH2_SRC
   include/catch2/catch_reporter_automake.hpp

@@ -1,5 +1,6 @@
-#include "meanSquereErrorCost.h"
-#include "matrix.h"
+#include "meanSquereErrorCost.hpp"
+
+#include "matrix.hpp"
 
 NNDataType MeanSquereErrorCost::calculateCost(const NNMatrixType& output, const NNMatrixType& target) const
 {

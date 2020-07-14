@@ -3,13 +3,13 @@
 #include <catch2/catch.hpp>
 #include <memory>
 
-#include "matrix.h"
-#include "meanSquereErrorCost.h"
-#include "mnistDataLoader.h"
-#include "neuralnetwork.h"
-#include "reluLayer.h"
-#include "sigmoidLayer.h"
-#include "userInterface.h"
+#include "matrix.hpp"
+#include "meanSquereErrorCost.hpp"
+#include "mnistDataLoader.hpp"
+#include "neuralnetwork.hpp"
+#include "reluLayer.hpp"
+#include "sigmoidLayer.hpp"
+#include "userInterface.hpp"
 
 TEST_CASE("matrix operations can be performed", "[matrix]") 
 {

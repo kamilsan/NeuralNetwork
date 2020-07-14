@@ -4,14 +4,14 @@
 #include <limits>
 #include <memory>
 
-#include "crossEntropyCost.h"
-#include "data_load_failure.h"
-#include "image.h"
-#include "meanSquereErrorCost.h"
-#include "mnistDataLoader.h"
-#include "reluLayer.h"
-#include "sigmoidLayer.h"
-#include "userInterface.h"
+#include "crossEntropyCost.hpp"
+#include "data_load_failure.hpp"
+#include "image.hpp"
+#include "meanSquereErrorCost.hpp"
+#include "mnistDataLoader.hpp"
+#include "reluLayer.hpp"
+#include "sigmoidLayer.hpp"
+#include "userInterface.hpp"
 
 void UserInterface::clearInputBuffer()
 {

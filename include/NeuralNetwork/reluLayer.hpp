@@ -1,6 +1,6 @@
 #pragma once
 
-#include "layer.h"
+#include "layer.hpp"
 
 class ReLULayer : public Layer
 {

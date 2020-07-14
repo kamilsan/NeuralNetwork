@@ -1,7 +1,7 @@
 #pragma once
 
-#include "matrix.h"
-#include "neuralnetwork.h"
+#include "matrix.hpp"
+#include "neuralnetwork.hpp"
 
 #include <fstream>
 

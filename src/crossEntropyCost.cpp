@@ -1,5 +1,6 @@
-#include "crossEntropyCost.h"
-#include "matrix.h"
+#include "crossEntropyCost.hpp"
+
+#include "matrix.hpp"
 
 NNDataType CrossEntropyCost::calculateCost(const NNMatrixType& output, const NNMatrixType& target) const
 {

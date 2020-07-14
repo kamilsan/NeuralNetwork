@@ -1,4 +1,4 @@
-#include "sigmoidLayer.h"
+#include "sigmoidLayer.hpp"
 
 NNDataType SigmoidLayer::activationFunction(NNDataType value) const
 {

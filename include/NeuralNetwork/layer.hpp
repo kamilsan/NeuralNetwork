@@ -1,6 +1,6 @@
 #pragma once
 
-#include "neuralnetwork.h"
+#include "neuralnetwork.hpp"
 
 #include <fstream>
 

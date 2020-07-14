@@ -4,13 +4,13 @@
 #include <iostream>
 #include <memory>
 
-#include "costFunctionStrategy.h"
-#include "crossEntropyCost.h"
-#include "data_load_failure.h"
-#include "meanSquereErrorCost.h"
-#include "neuralnetwork.h"
-#include "reluLayer.h"
-#include "sigmoidLayer.h"
+#include "costFunctionStrategy.hpp"
+#include "crossEntropyCost.hpp"
+#include "data_load_failure.hpp"
+#include "meanSquereErrorCost.hpp"
+#include "neuralnetwork.hpp"
+#include "reluLayer.hpp"
+#include "sigmoidLayer.hpp"
 
 NeuralNetwork::NeuralNetwork(unsigned int inputNodes, float learningRate, std::unique_ptr<CostFunctionStrategy> costFunction): 
     inputNodes_(inputNodes),

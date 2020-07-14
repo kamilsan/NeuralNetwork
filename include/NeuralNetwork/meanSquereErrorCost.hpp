@@ -1,6 +1,6 @@
 #pragma once
 
-#include "costFunctionStrategy.h"
+#include "costFunctionStrategy.hpp"
 
 class MeanSquereErrorCost : public CostFunctionStrategy
 {

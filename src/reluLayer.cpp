@@ -1,4 +1,4 @@
-#include "reluLayer.h"
+#include "reluLayer.hpp"
 
 NNDataType ReLULayer::activationFunction(NNDataType value) const
 {

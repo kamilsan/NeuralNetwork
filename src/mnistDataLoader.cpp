@@ -1,7 +1,8 @@
 #include <fstream>
 
-#include "mnistDataLoader.h"
-#include "data_load_failure.h"
+#include "mnistDataLoader.hpp"
+
+#include "data_load_failure.hpp"
 
 typedef std::vector<std::shared_ptr<NNMatrixType>> MatrixVec;
 

@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "mnistData.h"
+#include "mnistData.hpp"
 
 class UserInterface
 {
