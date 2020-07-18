@@ -93,15 +93,8 @@ TEST_CASE("saving and loading neural network", "[nn]")
 
     nn.save("nn_test.model");
 
-    NeuralNetwork* nn2 = NeuralNetwork::load("nn_test.model");
-    if(nn2 == nullptr)
-    {
-        return;
-    }
-    
-    NNMatrixType result2 = nn2->feedforward(input);
-
-    delete nn2;
+    NeuralNetwork nn2 = NeuralNetwork::load("nn_test.model");
+    NNMatrixType result2 = nn2.feedforward(input);
 
     const float EPS = 0.00001;
 

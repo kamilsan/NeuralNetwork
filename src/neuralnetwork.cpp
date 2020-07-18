@@ -24,6 +24,11 @@ unsigned int NeuralNetwork::getLayersCount() const
     return layers_.size();
 }
 
+unsigned int NeuralNetwork::getOutputNodesCount() const
+{
+    return outputNodes_;
+}
+
 NNMatrixType NeuralNetwork::feedforward(const NNMatrixType& input) const
 {
     if(input.getRows() != inputNodes_ || input.getColumns() != 1)
@@ -173,10 +178,10 @@ float NeuralNetwork::test(const std::vector<std::shared_ptr<NNMatrixType>>& inpu
     return 100.0f*correctPredictions/predictions;
 }
 
-void NeuralNetwork::addLayer(Layer* layer)
+void NeuralNetwork::addLayer(std::shared_ptr<Layer> layer)
 {
-    layers_.emplace_back(std::unique_ptr<Layer>(layer));
     outputNodes_ = layer->getNodesCount();
+    layers_.emplace_back(layer);
 }
 
 void NeuralNetwork::save(const char* filename) const
@@ -200,7 +205,7 @@ void NeuralNetwork::save(const char* filename) const
     ofile.close();
 }
 
-NeuralNetwork* NeuralNetwork::load(const char* filename)
+NeuralNetwork NeuralNetwork::load(const char* filename)
 {
     std::ifstream ifile(filename, std::ios::binary);
 
@@ -221,27 +226,25 @@ NeuralNetwork* NeuralNetwork::load(const char* filename)
     unsigned int idLen;
     ifile.read((char*)&idLen, sizeof(idLen));
 
-    char* id = new char[idLen];
-    ifile.read(id, idLen*sizeof(char));
+    std::unique_ptr<char[]> id = std::make_unique<char[]>(idLen);
+    ifile.read(id.get(), idLen*sizeof(char));
 
-    // do not delete this!
-    CostFunctionStrategy* costFunction = nullptr;
+    std::unique_ptr<CostFunctionStrategy> costFunction = nullptr;
 
     if(id[0] == 'M' && id[1] == 'S' && id[2] == 'E')
     {
-        costFunction = new MeanSquereErrorCost();
+        costFunction = std::make_unique<MeanSquereErrorCost>();
     }
     else if(id[0] == 'C' && id[1] == 'E' && id[2] == 'X')
     {
-        costFunction = new CrossEntropyCost();
+        costFunction = std::make_unique<CrossEntropyCost>();
     }
     else
     {
-        delete[] id;
         throw data_load_failure(filename);
     }
     
-    NeuralNetwork* nn = new NeuralNetwork(inputNodes, learingRate, std::unique_ptr<CostFunctionStrategy>(costFunction));
+    NeuralNetwork nn = NeuralNetwork(inputNodes, learingRate, std::move(costFunction));
 
     // Layers
     unsigned int layersCount;
@@ -249,47 +252,40 @@ NeuralNetwork* NeuralNetwork::load(const char* filename)
 
     for(unsigned int i = 0; i < layersCount; ++i)
     {
-        ifile.read((char*)&idLen, sizeof(idLen));
-        if(id) delete[] id;
-        id = new char[idLen];
-        ifile.read(id, idLen*sizeof(char));
+        ifile.read((char*)&idLen, sizeof(idLen)); // TODO: check if idLen has changed in order to avoid multiple allocations
+        id = std::make_unique<char[]>(idLen);
+        ifile.read(id.get(), idLen*sizeof(char));
 
         unsigned int rows, columns;
         ifile.read((char*)&rows, sizeof(rows));
         ifile.read((char*)&columns, sizeof(columns));
 
-        // this resource cannot be deleted!
-        Layer* layer = nullptr;
+        std::shared_ptr<Layer> layer = nullptr;
 
         if(id[0] == 'S' && id[1] == 'I' && id[2] == 'G')
         {
-            layer = new SigmoidLayer(rows, columns);
+            layer = std::make_shared<SigmoidLayer>(rows, columns);
         }
         else if(id[0] == 'R' && id[1] == 'E' && id[2] == 'L')
         {
-            layer = new ReLULayer(rows, columns);
+            layer = std::make_shared<ReLULayer>(rows, columns);
         }
 
         unsigned int len = rows*columns;
-        NNDataType* bufferWeights = new NNDataType[len];
-        ifile.read((char*)bufferWeights, len*sizeof(NNDataType));
+        std::unique_ptr<NNDataType[]> bufferWeights = std::make_unique<NNDataType[]>(len);
+        ifile.read((char*)bufferWeights.get(), len*sizeof(NNDataType));
 
-        NNDataType* bufferBias = new NNDataType[rows];
-        ifile.read((char*)bufferBias, rows*sizeof(NNDataType));
+        std::unique_ptr<NNDataType[]> bufferBias = std::make_unique<NNDataType[]>(rows);
+        ifile.read((char*)bufferBias.get(), rows*sizeof(NNDataType));
 
-        NNMatrixType weights = NNMatrixType(bufferWeights, rows, columns);
-        NNMatrixType bias = NNMatrixType(bufferBias, rows, 1);
-
-        delete[] bufferWeights;
-        delete[] bufferBias;
+        NNMatrixType weights = NNMatrixType(bufferWeights.get(), rows, columns);
+        NNMatrixType bias = NNMatrixType(bufferBias.get(), rows, 1);
 
         layer->weights_ = weights;
         layer->bias_ = bias;
 
-        nn->addLayer(layer);
+        nn.addLayer(std::move(layer));
     }
-
-    if(id) delete[] id;
 
     ifile.close();
 

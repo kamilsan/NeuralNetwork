@@ -3,6 +3,7 @@
 #include <chrono>
 #include <functional>
 #include <iostream>
+#include <memory>
 #include <random>
 #include <type_traits>
 
@@ -16,16 +17,14 @@ public:
     Matrix(unsigned int rows, unsigned int columns);
     explicit Matrix(): Matrix(1, 1) {}
     Matrix(const T* data, unsigned int rows, unsigned int columns);
-    Matrix(const Matrix& o): Matrix(o.data_, o.rows_, o.columns_) {}
+    Matrix(const Matrix& o): Matrix(o.data_.get(), o.rows_, o.columns_) {}
     Matrix(Matrix&& o);
 
-    ~Matrix();
-
-    const_iterator cbegin() const { return data_; }
-    const_iterator cend() const { return data_ + len_; }
+    const_iterator cbegin() const { return data_.get(); }
+    const_iterator cend() const { return data_ .get() + len_; }
     
-    iterator begin() { return data_; }
-    iterator end() { return data_ + len_; }
+    iterator begin() { return data_.get(); }
+    iterator end() { return data_.get() + len_; }
 
     unsigned int getRows() const;
     unsigned int getColumns() const;
@@ -81,7 +80,7 @@ private:
     unsigned int columns_;
     unsigned int len_;
     std::mt19937 generator_;
-    T* data_;
+    std::unique_ptr<T[]> data_;
 
     unsigned int at(unsigned int i, unsigned int j) const
     {
@@ -96,7 +95,7 @@ Matrix<T>::Matrix(unsigned int rows, unsigned int columns): rows_(rows), columns
     generator_ = std::mt19937(seed);
 
     len_ = rows*columns;
-    data_ = new T[len_];
+    data_ = std::make_unique<T[]>(len_);
 
     for(unsigned int i = 0; i < len_; ++i)
     {
@@ -111,7 +110,7 @@ Matrix<T>::Matrix(const T* data, unsigned int rows, unsigned int columns): rows_
     generator_ = std::mt19937(seed);
 
     len_ = rows*columns;
-    data_ = new T[len_];
+    data_ = std::make_unique<T[]>(len_);
     for(unsigned int i = 0; i < len_; ++i)
     {
         data_[i] = data[i];
@@ -121,18 +120,11 @@ Matrix<T>::Matrix(const T* data, unsigned int rows, unsigned int columns): rows_
 template<typename T>
 Matrix<T>::Matrix(Matrix&& o)
 {
-    data_ = o.data_;
+    data_ = std::move(o.data_);
     rows_ = o.rows_;
     columns_ = o.columns_;
     len_ = o.len_;
     generator_ = std::move(o.generator_);
-    o.data_ = nullptr;
-}
-
-template<typename T>
-Matrix<T>::~Matrix()
-{
-    delete[] data_;
 }
 
 template<typename T>
@@ -150,7 +142,7 @@ unsigned int Matrix<T>::getColumns() const
 template<typename T>
 const T* Matrix<T>::getData() const
 {
-    return data_;
+    return data_.get();
 }
 
 template<typename T>
@@ -254,18 +246,18 @@ Matrix<T> Matrix<T>::transpose(const Matrix<T>& m)
 template<typename T>
 Matrix<T>& Matrix<T>::operator=(const Matrix& o)
 {
-    float* old = data_;
-    rows_ = o.rows_;
-    columns_ = o.columns_;
-    len_ = o.len_;
-    data_ = new T[len_];
-
-    for(unsigned int i = 0; i < len_; ++i)
+    if(&o != this)
     {
-        data_[i] = o.data_[i];
-    }
+        rows_ = o.rows_;
+        columns_ = o.columns_;
+        len_ = o.len_;
+        data_ = std::make_unique<T[]>(len_);
 
-    delete[] old;
+        for(unsigned int i = 0; i < len_; ++i)
+        {
+            data_[i] = o.data_[i];
+        }
+    }
     
     return *this;
 }
@@ -275,13 +267,11 @@ Matrix<T>& Matrix<T>::operator=(Matrix&& o)
 {
     if(&o != this)
     {
-        if(data_) delete[] data_;
-        data_ = o.data_;
+        data_ = std::move(o.data_);
         rows_ = o.rows_;
         columns_ = o.columns_;
         len_ = o.len_;
         generator_ = std::move(o.generator_);
-        o.data_ = nullptr;
     }
     return *this;
 }

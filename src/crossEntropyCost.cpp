@@ -18,7 +18,7 @@ NNMatrixType CrossEntropyCost::calculateCostDerivative(const NNMatrixType& outpu
 {
     // dc/da = (a-y)/(a(1-a))
     unsigned int rows = output.getRows();
-    NNDataType* buffer = new NNDataType[rows];
+    std::unique_ptr<NNDataType[]> buffer = std::make_unique<NNDataType[]>(rows);
 
     for(unsigned int i = 0; i < rows; ++i)
     {
@@ -27,9 +27,7 @@ NNMatrixType CrossEntropyCost::calculateCostDerivative(const NNMatrixType& outpu
         buffer[i] = (ai - yi)/(ai*(1.0 - ai));
     }
 
-    NNMatrixType result = NNMatrixType(buffer, rows, 1);
-
-    delete[] buffer;
+    NNMatrixType result = NNMatrixType(buffer.get(), rows, 1);
 
     return result;
 }

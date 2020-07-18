@@ -19,6 +19,7 @@ public:
     NeuralNetwork(unsigned int inputNodes, float learningRate, std::unique_ptr<CostFunctionStrategy> costFunction);
 
     unsigned int getLayersCount() const;
+    unsigned int getOutputNodesCount() const;
 
     template<typename T>
     void addLayer(unsigned int nodes);
@@ -38,10 +39,10 @@ public:
 
     // Serialization and deserialization
     void save(const char* filename) const;
-    static NeuralNetwork* load(const char* filename);
+    static NeuralNetwork load(const char* filename);
 private:
     void singleInputTrain(const NNMatrixType& input, const NNMatrixType& target); // used in train
-    void addLayer(Layer* layer); // used in serialization
+    void addLayer(std::shared_ptr<Layer> layer); // used in serialization
 
     unsigned int inputNodes_;
     unsigned int outputNodes_;

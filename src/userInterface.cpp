@@ -19,7 +19,7 @@ void UserInterface::clearInputBuffer()
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
 
-void UserInterface::printAsciiImage(const char* image)
+void UserInterface::printAsciiImage(const Image& image)
 {
     const unsigned int IMG_SIZE = 28;
     std::cout << "\n";
@@ -40,32 +40,27 @@ void UserInterface::printAsciiImage(const char* image)
 
 void UserInterface::handleInteraction()
 {    
-    NeuralNetwork* nn = nullptr;
-    MNISTData* mnistData = nullptr;
+    std::optional<NeuralNetwork> nn{};
+    std::optional<MNISTData> mnistData{};
 
     // handles states in loop
     // it's a finite-state automaton
     State state = State::ModelNotLoaded;
-    unsigned int outputNodes = 0;
-
     while(state != State::Exit)
     {
-        handleCurrentState(mnistData, nn, state, outputNodes);
+        handleCurrentState(mnistData, nn, state);
     }
-
-    if(mnistData != nullptr) delete mnistData;
-    if(nn != nullptr) delete nn;
 }
 
-void UserInterface::handleCurrentState(MNISTData* &data, NeuralNetwork* &nn, State &state, unsigned int& outputNodes)
+void UserInterface::handleCurrentState(std::optional<MNISTData>& data, std::optional<NeuralNetwork>& nn, State& state)
 {
     switch(state)
     {
         case State::ModelNotLoaded:
-            handleStateModelNotLoaded(data, nn, state, outputNodes);
+            handleStateModelNotLoaded(data, nn, state);
             break;
         case State::LayersAddition:
-            handleStateLayersAddition(data, nn, state, outputNodes);
+            handleStateLayersAddition(data, nn, state);
             break;
         case State::ModelLoaded:
             handleStateModelLoaded(nn, state);
@@ -75,10 +70,8 @@ void UserInterface::handleCurrentState(MNISTData* &data, NeuralNetwork* &nn, Sta
     }
 }
 
-void UserInterface::handleStateModelNotLoaded(MNISTData* &data, NeuralNetwork* &nn, State &state, unsigned int& outputNodes)
+void UserInterface::handleStateModelNotLoaded(std::optional<MNISTData>& data, std::optional<NeuralNetwork>& nn, State &state)
 {
-    outputNodes = 0;
-
     int choice;
     do
     {
@@ -108,7 +101,7 @@ void UserInterface::handleStateModelNotLoaded(MNISTData* &data, NeuralNetwork* &
     }
 }
 
-void UserInterface::handleStateLayersAddition(const MNISTData* data, NeuralNetwork* nn, State &state, unsigned int& outputNodes)
+void UserInterface::handleStateLayersAddition(std::optional<MNISTData>& data, std::optional<NeuralNetwork>& nn, State &state)
 {
     int choice;
     do
@@ -128,17 +121,17 @@ void UserInterface::handleStateLayersAddition(const MNISTData* data, NeuralNetwo
     switch(choice)
     {
         case 1:
-            addLayer<ReLULayer>(nn, outputNodes);
+            addLayer<ReLULayer>(nn);
             break;
         case 2:
-            addLayer<SigmoidLayer>(nn, outputNodes);
+            addLayer<SigmoidLayer>(nn);
             break;
         case 3:
             if(nn->getLayersCount() == 0)
             {
                 std::cout << "Please add at least one layer.\n\n";
             }
-            else if(outputNodes != 10)
+            else if(nn->getOutputNodesCount() != 10)
             {
                 std::cout << "Last layer has to have 10 nodes!\n";
                 state = State::ModelNotLoaded;
@@ -149,7 +142,7 @@ void UserInterface::handleStateLayersAddition(const MNISTData* data, NeuralNetwo
 }
 
 template <typename T>
-void UserInterface::addLayer(NeuralNetwork* nn, unsigned int& outputNodes)
+void UserInterface::addLayer(std::optional<NeuralNetwork>& nn)
 {
     unsigned int nodes = 0;
     do
@@ -164,12 +157,10 @@ void UserInterface::addLayer(NeuralNetwork* nn, unsigned int& outputNodes)
     } while(nodes < 1);
 
     nn->addLayer<T>(nodes);
-    outputNodes = nodes;
-    
     std::cout << "\n";
 }
 
-void UserInterface::trainModel(const MNISTData* data, NeuralNetwork* nn, State &state)
+void UserInterface::trainModel(std::optional<MNISTData>& data, std::optional<NeuralNetwork>& nn, State& state)
 {
     auto readIntFromUserInputAndVerify = [](const char* prompt, unsigned int &value, unsigned int condition) 
     { 
@@ -206,7 +197,7 @@ void UserInterface::trainModel(const MNISTData* data, NeuralNetwork* nn, State &
     state = State::ModelLoaded;
 }
 
-void UserInterface::handleStateModelLoaded(NeuralNetwork* nn, State &state)
+void UserInterface::handleStateModelLoaded(std::optional<NeuralNetwork>& nn, State& state)
 {
     unsigned int choice;
     do
@@ -242,13 +233,12 @@ void UserInterface::handleStateModelLoaded(NeuralNetwork* nn, State &state)
     }
 }
 
-void UserInterface::handleModelLoading(NeuralNetwork* &nn, State &state)
+void UserInterface::handleModelLoading(std::optional<NeuralNetwork>& nn, State& state)
 {
     std::cout << "Enter model filename: ";
     std::string filename;
     std::cin >> filename;
 
-    if(nn != nullptr) delete nn;
     try
     {
         nn = NeuralNetwork::load(filename.c_str());
@@ -264,7 +254,7 @@ void UserInterface::handleModelLoading(NeuralNetwork* &nn, State &state)
     state = State::ModelLoaded;
 }
 
-void UserInterface::handleModelCreation(MNISTData* &data, NeuralNetwork* &nn, State &state)
+void UserInterface::handleModelCreation(std::optional<MNISTData>& data, std::optional<NeuralNetwork>& nn, State& state)
 {
     if(!data)
     {
@@ -280,8 +270,6 @@ void UserInterface::handleModelCreation(MNISTData* &data, NeuralNetwork* &nn, St
             return;
         }
     }
-
-    if(nn != nullptr) delete nn;
 
     float learingRate;
     do
@@ -318,66 +306,65 @@ void UserInterface::handleModelCreation(MNISTData* &data, NeuralNetwork* &nn, St
             costFunction = std::make_unique<CrossEntropyCost>();
     }
 
-    nn = new NeuralNetwork(784, learingRate, std::move(costFunction));
+    nn = NeuralNetwork(784, learingRate, std::move(costFunction));
 
     state = State::LayersAddition;
 
     std::cout << "\n";
 }
 
-void UserInterface::handleDigitRecognition(const NeuralNetwork* nn)
+void UserInterface::handleDigitRecognition(std::optional<NeuralNetwork>& nn)
 {
     std::cout << "Enter image filename: ";
     std::string filename;
     std::cin >> filename;
-    
-    std::unique_ptr<Image> img = nullptr;
+
     try
-    {
-        img = std::make_unique<Image>(filename.c_str());
+    {    
+        Image img{filename.c_str()};
+        
+        if(img.getWidth() != 28 || img.getHeight() != 28)
+        {
+            std::cout << "Improper image size! Make sure that the image has dimentions 28x28.\n";
+            return;
+        }
+
+        const unsigned int IMAGE_PIXELS = 784;
+        float matrixData[IMAGE_PIXELS];
+
+        for(unsigned int i = 0; i < IMAGE_PIXELS; ++i)
+        {
+            matrixData[i] = ((unsigned char)img[3*i])/255.0f;
+        }
+
+        NNMatrixType inputMatrix = NNMatrixType(matrixData, IMAGE_PIXELS, 1);
+        NNMatrixType resultMatrix = nn->feedforward(inputMatrix);
+
+        unsigned int predictedLabel = 0;
+        float max = resultMatrix.get(0, 0);
+        for(unsigned int i = 0; i < resultMatrix.getRows(); ++i)
+        {
+            if(resultMatrix.get(i, 0) > max)
+            {
+                predictedLabel = i;
+                max = resultMatrix.get(i, 0);
+            }
+        }
+
+        printAsciiImage(img);
+        
+        std::cout << "Result matrix:\n" << resultMatrix << "\n\n";
+        std::cout << "Predicted Label:\n" << predictedLabel << "\n\n";
     }
     catch(const data_load_failure& ex)
     {
         std::cout << ex.what() << "\n";
         return;
     }
-    
-    if(img->getWidth() != 28 || img->getHeight() != 28)
-    {
-        std::cout << "Improper image size! Make sure that the image has dimentions 28x28.\n";
-        return;
-    }
 
-    const unsigned int IMAGE_PIXELS = 784;
-    float matrixData[IMAGE_PIXELS];
-    const char* imagePixels = img->getPixels();
-
-    for(unsigned int i = 0; i < IMAGE_PIXELS; ++i)
-    {
-        matrixData[i] = ((unsigned char)imagePixels[3*i])/255.0f;
-    }
-
-    NNMatrixType inputMatrix = NNMatrixType(matrixData, IMAGE_PIXELS, 1);
-    NNMatrixType resultMatrix = nn->feedforward(inputMatrix);
-
-    unsigned int predictedLabel = 0;
-    float max = resultMatrix.get(0, 0);
-    for(unsigned int i = 0; i < resultMatrix.getRows(); ++i)
-    {
-        if(resultMatrix.get(i, 0) > max)
-        {
-            predictedLabel = i;
-            max = resultMatrix.get(i, 0);
-        }
-    }
-
-    printAsciiImage(imagePixels);
-
-    std::cout << "Result matrix:\n" << resultMatrix << "\n\n";
-    std::cout << "Predicted Label:\n" << predictedLabel << "\n\n";
 }
 
-void UserInterface::handleModelSave(const NeuralNetwork* nn)
+void UserInterface::handleModelSave(std::optional<NeuralNetwork>& nn)
 {
     std::cout << "Enter model filename: ";
     std::string filename;

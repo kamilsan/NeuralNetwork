@@ -1,8 +1,11 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 
 #include "mnistData.hpp"
+
+class Image;
 
 class UserInterface
 {
@@ -14,21 +17,21 @@ private:
     enum class State { ModelNotLoaded, LayersAddition, ModelLoaded, Exit };
 
     static void clearInputBuffer();
-    static void printAsciiImage(const char* image);
+    static void printAsciiImage(const Image& image);
 
-    static void handleCurrentState(MNISTData* &data, NeuralNetwork* &nn, State &state, unsigned int& outputNodes);
-    static void handleStateModelNotLoaded(MNISTData* &data, NeuralNetwork* &nn, State &state, unsigned int& outputNodes);
+    static void handleCurrentState(std::optional<MNISTData>& data, std::optional<NeuralNetwork>& nn, State& state);
+    static void handleStateModelNotLoaded(std::optional<MNISTData>& data, std::optional<NeuralNetwork>& nn, State& state);
     
-    static void handleStateLayersAddition(const MNISTData* data, NeuralNetwork* nn, State &state, unsigned int& outputNodes);
+    static void handleStateLayersAddition(std::optional<MNISTData>& data, std::optional<NeuralNetwork>& nn, State& state);
+    
     template <typename T>
+    static void addLayer(std::optional<NeuralNetwork>& nn);
     
-    static void addLayer(NeuralNetwork* nn, unsigned int& outputNodes);
+    static void trainModel(std::optional<MNISTData>& data, std::optional<NeuralNetwork>& nn, State& state);
     
-    static void trainModel(const MNISTData* data, NeuralNetwork* nn, State &state);
-    
-    static void handleStateModelLoaded(NeuralNetwork* nn, State &state);
-    static void handleModelLoading(NeuralNetwork* &nn, State &state);
-    static void handleModelCreation(MNISTData* &data, NeuralNetwork* &nn, State &state);
-    static void handleDigitRecognition(const NeuralNetwork* nn);
-    static void handleModelSave(const NeuralNetwork* nn);
+    static void handleStateModelLoaded(std::optional<NeuralNetwork>& nn, State& state);
+    static void handleModelLoading(std::optional<NeuralNetwork>& nn, State& state);
+    static void handleModelCreation(std::optional<MNISTData>& data, std::optional<NeuralNetwork>& nn, State& state);
+    static void handleDigitRecognition(std::optional<NeuralNetwork>& nn);
+    static void handleModelSave(std::optional<NeuralNetwork>& nn);
 };

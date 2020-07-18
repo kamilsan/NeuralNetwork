@@ -13,8 +13,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set(PROJECT_CODE
-                                include/NeuralNetwork/matrix.hpp
-                                include/NeuralNetwork/costFunctionStrategy.hpp
+                               include/NeuralNetwork/matrix.hpp
+                               include/NeuralNetwork/costFunctionStrategy.hpp
   src/crossEntropyCost.cpp     include/NeuralNetwork/crossEntropyCost.hpp
   src/meanSquereErrorCost.cpp  include/NeuralNetwork/meanSquereErrorCost.hpp
   src/image.cpp                include/NeuralNetwork/image.hpp

@@ -17,52 +17,39 @@ int MNISTDataLoader::reverseInt(int number)
     return ((int)c1 << 24) + ((int)c2 << 16) + ((int)c3 << 8) + c4;
 }
 
-MNISTData* MNISTDataLoader::loadData(const char* trainingImagesFilename,
-                               const char* trainingLabelsFilename,
-                               const char* testingImagesFilename,
-                               const char* testingLabelsFilename)
+MNISTData MNISTDataLoader::loadData(const char* trainingImagesFilename,
+                                    const char* trainingLabelsFilename,
+                                    const char* testingImagesFilename,
+                                    const char* testingLabelsFilename)
 {
-    std::vector<char*> trainingImages;
+    std::vector<std::unique_ptr<char[]>> trainingImages;
     int nLoadedTrainingImages;
     int imagePixels;
     loadImages(trainingImagesFilename, trainingImages, nLoadedTrainingImages, imagePixels);
 
     int nLoadedTrainingLabels;
-    char* trainingLabels = loadLabels(trainingLabelsFilename, nLoadedTrainingLabels);
+    auto trainingLabels = loadLabels(trainingLabelsFilename, nLoadedTrainingLabels);
 
-    std::vector<char*> testingImages;
+    std::vector<std::unique_ptr<char[]>> testingImages;
     int nLoadedTestingImages;
     loadImages(testingImagesFilename, testingImages, nLoadedTestingImages, imagePixels);
 
     int nLoadedTestingLabels;
-    char* testingLabels = loadLabels(testingLabelsFilename, nLoadedTestingLabels);
+    auto testingLabels = loadLabels(testingLabelsFilename, nLoadedTestingLabels);
 
     MatrixVec trainingDataMatrix, trainingLabelsMatrix, testingDataMatrix, testingLabelsMatrix;
-    createMatriciesFromRawData(trainingImages, trainingLabels, nLoadedTrainingImages, 
+    createMatriciesFromRawData(trainingImages, std::move(trainingLabels), nLoadedTrainingImages, 
                                 imagePixels, trainingDataMatrix, trainingLabelsMatrix);
-    createMatriciesFromRawData(testingImages, testingLabels, nLoadedTestingImages, 
+    createMatriciesFromRawData(testingImages, std::move(testingLabels), nLoadedTestingImages, 
                                 imagePixels, testingDataMatrix, testingLabelsMatrix);
-
-    for(auto &trainingImage : trainingImages)
-    {
-        delete[] trainingImage;
-    }
-
-    for(auto &testingImage : testingImages)
-    {
-        delete[] testingImage;
-    }
-
-    delete[] trainingLabels;
-    delete[] testingLabels;
     
-    return new MNISTData(trainingDataMatrix, trainingLabelsMatrix, testingDataMatrix, testingLabelsMatrix);
+    return MNISTData(trainingDataMatrix, trainingLabelsMatrix, testingDataMatrix, testingLabelsMatrix);
 }
 
 void MNISTDataLoader::loadImages(const char* imagesFilename, 
-                             std::vector<char*> &images, 
-                             int &nLoadedImages,
-                             int &imagePixels)
+                             std::vector<std::unique_ptr<char[]>>& images, 
+                             int& nLoadedImages,
+                             int& imagePixels)
 {
     std::ifstream file;
     file.open(imagesFilename, std::ios::binary);
@@ -86,8 +73,8 @@ void MNISTDataLoader::loadImages(const char* imagesFilename,
     int len = w*h;
     for(int i = 0; i < nItems; ++i)
     {
-        images.push_back(new char[len]);
-        file.read(images[i], len);
+        images.push_back(std::make_unique<char[]>(len));
+        file.read(images[i].get(), len);
     }
 
     file.close();
@@ -96,7 +83,7 @@ void MNISTDataLoader::loadImages(const char* imagesFilename,
     imagePixels = w*h;
 }
 
-char* MNISTDataLoader::loadLabels(const char* labelsFilename, int &nLoadedLabels)
+std::unique_ptr<char[]> MNISTDataLoader::loadLabels(const char* labelsFilename, int& nLoadedLabels)
 {
     std::ifstream file;
     file.open(labelsFilename, std::ios::binary);
@@ -106,21 +93,21 @@ char* MNISTDataLoader::loadLabels(const char* labelsFilename, int &nLoadedLabels
     }
 
     int magicNum, nItems;
-    file.read((char *)&magicNum, 4);
+    file.read((char *)&magicNum, sizeof(int));
     magicNum = reverseInt(magicNum);
-    file.read((char *)&nItems, 4);
+    file.read((char *)&nItems, sizeof(int));
     nItems = reverseInt(nItems);
 
-    char* labels = new char[nItems];
-    file.read(labels, nItems);
+    std::unique_ptr<char[]> labels = std::make_unique<char[]>(nItems);
+    file.read(labels.get(), nItems);
     file.close();
 
     nLoadedLabels = nItems;
     return labels;
 }
 
-void MNISTDataLoader::createMatriciesFromRawData(const std::vector<char*> &images, 
-                                             const char* labels, 
+void MNISTDataLoader::createMatriciesFromRawData(const std::vector<std::unique_ptr<char[]>>& images, 
+                                             std::unique_ptr<char[]> labels, 
                                              int nData, 
                                              int imagePixels, 
                                              MatrixVec& imagesMatricies, 
@@ -128,7 +115,7 @@ void MNISTDataLoader::createMatriciesFromRawData(const std::vector<char*> &image
 {
     const int POSSIBLE_LABELS = 10;
 
-    float* imageMatrixData = new float[imagePixels];
+    std::unique_ptr<float[]> imageMatrixData = std::make_unique<float[]>(imagePixels);
     float labelMatrixData[POSSIBLE_LABELS];
 
     imagesMatricies.clear();
@@ -142,7 +129,7 @@ void MNISTDataLoader::createMatriciesFromRawData(const std::vector<char*> &image
         {
             imageMatrixData[j] = (unsigned char)(images[i][j])/255.0f;
         }
-        imagesMatricies.push_back(std::make_shared<NNMatrixType>(imageMatrixData, imagePixels, 1));
+        imagesMatricies.push_back(std::make_shared<NNMatrixType>(imageMatrixData.get(), imagePixels, 1));
         
         // convert from label to matrix by setting matrix entry to 1 in specific place
         int label = +labels[i];
@@ -153,6 +140,4 @@ void MNISTDataLoader::createMatriciesFromRawData(const std::vector<char*> &image
         }
         lablesMatricies.push_back(std::make_shared<NNMatrixType>(labelMatrixData, POSSIBLE_LABELS, 1));
     }
-
-    delete[] imageMatrixData;
 }
