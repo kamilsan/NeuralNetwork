@@ -5,6 +5,7 @@
 #include <iostream>
 #include <memory>
 #include <random>
+#include <sstream>
 #include <type_traits>
 
 template<typename T>
@@ -153,8 +154,9 @@ T Matrix<T>::get(unsigned int i, unsigned int j) const
 {
     if(i < 0 || i >= rows_ || j < 0 || j >= columns_)
     {
-        std::cout << "ERROR: Cannot access matrix entry indexed " << i << j << "!\n";
-        return 0;
+        std::stringstream ss;
+        ss << "ERROR: Cannot access matrix entry indexed " << i << j << "!\n";
+        throw std::runtime_error(ss.str());
     }
     return data_[at(i, j)];
 }
@@ -220,8 +222,7 @@ Matrix<T> Matrix<T>::hadamard(const Matrix<T>& o) const
 {
     if(o.rows_ != rows_ || o.columns_ != columns_)
     {
-        std::cout << "ERROR: Cannot perform hadamard product on matrices with different sizes!\n";
-        return *this;
+        throw std::runtime_error("ERROR: Cannot perform hadamard product on matrices with different sizes!\n");
     }
     Matrix result(rows_, columns_);
     for(unsigned int i = 0; i < len_; ++i)
@@ -286,8 +287,7 @@ Matrix<T> Matrix<T>::operator+(const Matrix& o) const
 {
     if(o.rows_ != rows_ || o.columns_ != columns_)
     {
-        std::cout << "ERROR: Cannot perform addition of matrices with different sizes!\n";
-        return *this;
+        throw std::runtime_error("ERROR: Cannot perform addition of matrices with different sizes!\n");
     }
     Matrix result(rows_, columns_);
     for(unsigned int i = 0; i < len_; ++i)
@@ -302,8 +302,7 @@ Matrix<T>& Matrix<T>::operator+=(const Matrix& o)
 {
     if(o.rows_ != rows_ || o.columns_ != columns_)
     {
-        std::cout << "ERROR: Cannot perform addition of matrices with different sizes!\n";
-        return *this;
+        throw std::runtime_error("ERROR: Cannot perform addition of matrices with different sizes!\n");
     }
     for(unsigned int i = 0; i < len_; ++i)
     {
@@ -317,8 +316,7 @@ Matrix<T> Matrix<T>::operator-(const Matrix& o) const
 {
     if(o.rows_ != rows_ || o.columns_ != columns_)
     {
-        std::cout << "ERROR: Cannot perform subtraction of matrices with different sizes!\n";
-        return *this;
+        throw std::runtime_error("ERROR: Cannot perform subtraction of matrices with different sizes!\n");
     }
     Matrix result(rows_, columns_);
     for(unsigned int i = 0; i < len_; ++i)
@@ -333,8 +331,7 @@ Matrix<T>& Matrix<T>::operator-=(const Matrix& o)
 {
     if(o.rows_ != rows_ || o.columns_ != columns_)
     {
-        std::cout << "ERROR: Cannot perform addition of matrices with different sizes!\n";
-        return *this;
+        throw std::runtime_error("ERROR: Cannot perform addition of matrices with different sizes!\n");
     }
     for(unsigned int i = 0; i < len_; ++i)
     {
@@ -369,8 +366,7 @@ Matrix<T> Matrix<T>::operator*(const Matrix& o) const
 {
     if(columns_ != o.rows_)
     {
-        std::cout << "ERROR: Inappropriate sizes of matrices to perform multiplication!\n";
-        return *this;
+        throw std::runtime_error("ERROR: Inappropriate sizes of matrices to perform multiplication!\n");
     }
     Matrix result(rows_, o.columns_);
     T s;

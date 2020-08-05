@@ -33,8 +33,7 @@ NNMatrixType NeuralNetwork::feedforward(const NNMatrixType& input) const
 {
     if(input.getRows() != inputNodes_ || input.getColumns() != 1)
     {
-        std::cout << "ERROR: passed input matrix has wrong dimensions!\n";
-        return NNMatrixType();
+        throw std::runtime_error("ERROR: passed input matrix has wrong dimensions!\n");
     }
 
     NNMatrixType result = input;
