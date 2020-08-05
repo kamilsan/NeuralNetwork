@@ -65,33 +65,27 @@ void NeuralNetwork::train(unsigned int epochs,
 
     unsigned int numBatches = std::ceil((float)trainingSize / batchSize);
 
-    NNMatrixType input;
-    NNMatrixType target;
+    NNMatrixType input{inputNodes_, 1};
+    NNMatrixType target{outputNodes_, 1};
 
     for(unsigned int epoch = 0; epoch < epochs; ++epoch)
     {
         std::cout << "Epoch " << epoch + 1 << " out of " << epochs << "\n";
         std::shuffle(permutaionTable.begin(), permutaionTable.end(), generator);
+        
+        unsigned int idx = 0;
         for(unsigned int n = 0; n < numBatches; ++n)
         {
             // Train on single batch
-            unsigned int startIdx = n*batchSize;
-
             for(unsigned int i = 0; i < batchSize; ++i)
             {
-                unsigned int idx = startIdx + i;
                 if(idx >= trainingSize) break;
 
                 input = *inputs[permutaionTable[idx]];
                 target = *targets[permutaionTable[idx]];
 
-                if(input.getRows() != inputNodes_ || input.getColumns() != 1)
-                {
-                    std::cout << "ERROR: passed input matrix has wrong dimensions!\n";
-                    return;
-                }
-
                 singleInputTrain(input, target);
+                idx += 1;
             }
             
             // Adjust weights and biases after finishing batch

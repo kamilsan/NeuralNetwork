@@ -56,6 +56,9 @@ public:
 
     Matrix operator*(const Matrix& o) const;
 
+    const T& operator[](int index) const { return data_[index]; }
+    T& operator[](int index) { return data_[index]; }
+
     friend Matrix operator*(T f, const Matrix& m)
     {
         return m*f;
@@ -248,10 +251,12 @@ Matrix<T>& Matrix<T>::operator=(const Matrix& o)
 {
     if(&o != this)
     {
+        if(len_ != o.len_)
+            data_ = std::make_unique<T[]>(len_);
+        
         rows_ = o.rows_;
         columns_ = o.columns_;
         len_ = o.len_;
-        data_ = std::make_unique<T[]>(len_);
 
         for(unsigned int i = 0; i < len_; ++i)
         {
