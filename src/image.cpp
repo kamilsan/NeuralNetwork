@@ -3,35 +3,23 @@
 #include "image.hpp"
 
 #include "data_load_failure.hpp"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 Image::Image(const char* fileName)
 {
-    std::ifstream file;
-    file.open(fileName, std::ios::binary);
-    if(!file.is_open()) throw data_load_failure(fileName);
+    int n = 0;
+    unsigned char* data = stbi_load(fileName, &width_, &height_, &n, 0);
+    if(!data)
+        throw data_load_failure(fileName);
 
-    char h[4];
-    file.read(h, 3);
-    if(h[0] != 'P' || h[1] != '6') 
-    { 
-        throw data_load_failure(fileName, " Please make sure that the file has a correct format."); 
-    }
+    if(n != 3)
+        throw data_load_failure(fileName, " Please make sure that the image has 3 components.");
 
-    while(file.get() == '#')
-    {
-        while(file.get() != '\n');
-    }
-    file.unget();
-
-    int max;
-    file >> width_ >> height_ >> max;
-    file.get();
-
-    int len = 3*width_*height_;
-    pixels_ = std::make_unique<char[]>(len);
-    file.read(pixels_.get(), len);
-
-    file.close();
+    const int len = 3*width_*height_;
+    pixels_ = std::make_unique<unsigned char[]>(len);
+    memcpy(pixels_.get(), data, len * sizeof(unsigned char)); // Copying is easier than using custom deleter for unique_ptr :) 
+    stbi_image_free(data);
 }
 
 Image::Image(const Image& other)
@@ -40,7 +28,7 @@ Image::Image(const Image& other)
     height_ = other.height_;
 
     int len = 3*width_*height_;
-    pixels_ = std::make_unique<char[]>(len);
+    pixels_ = std::make_unique<unsigned char[]>(len);
 
     for(int i = 0; i < len; ++i)
     {
@@ -73,7 +61,7 @@ Image& Image::operator=(const Image& other)
         height_ = other.height_;
 
         int len = 3*width_*height_;
-        pixels_ = std::make_unique<char[]>(len);
+        pixels_ = std::make_unique<unsigned char[]>(len);
 
         for(int i = 0; i < len; ++i)
         {
@@ -96,12 +84,12 @@ Image& Image::operator=(Image&& other)
     return *this;
 }
 
-char Image::operator[](unsigned int index) const
+unsigned char Image::operator[](unsigned int index) const
 {
     return pixels_[index];
 }
 
-char& Image::operator[](unsigned int index)
+unsigned char& Image::operator[](unsigned int index)
 {
     return pixels_[index];
 }
