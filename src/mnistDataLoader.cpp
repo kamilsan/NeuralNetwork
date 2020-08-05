@@ -4,7 +4,7 @@
 
 #include "data_load_failure.hpp"
 
-typedef std::vector<std::shared_ptr<NNMatrixType>> MatrixVec;
+typedef std::vector<NNMatrixType> MatrixVec;
 
 int MNISTDataLoader::reverseInt(int number)
 {
@@ -129,7 +129,7 @@ void MNISTDataLoader::createMatriciesFromRawData(const std::vector<std::unique_p
         {
             imageMatrixData[j] = (unsigned char)(images[i][j])/255.0f;
         }
-        imagesMatricies.push_back(std::make_shared<NNMatrixType>(imageMatrixData.get(), imagePixels, 1));
+        imagesMatricies.emplace_back(NNMatrixType(imageMatrixData.get(), imagePixels, 1));
         
         // convert from label to matrix by setting matrix entry to 1 in specific place
         int label = +labels[i];
@@ -138,6 +138,6 @@ void MNISTDataLoader::createMatriciesFromRawData(const std::vector<std::unique_p
             if(n != label) labelMatrixData[n] = 0.0f;
             else labelMatrixData[n] = 1.0f;
         }
-        lablesMatricies.push_back(std::make_shared<NNMatrixType>(labelMatrixData, POSSIBLE_LABELS, 1));
+        lablesMatricies.emplace_back(NNMatrixType(labelMatrixData, POSSIBLE_LABELS, 1));
     }
 }

@@ -48,8 +48,8 @@ NNMatrixType NeuralNetwork::feedforward(const NNMatrixType& input) const
 
 void NeuralNetwork::train(unsigned int epochs, 
                           unsigned int batchSize, 
-                          const std::vector<std::shared_ptr<NNMatrixType>>& inputs, 
-                          const std::vector<std::shared_ptr<NNMatrixType>>& targets)
+                          const std::vector<NNMatrixType>& inputs, 
+                          const std::vector<NNMatrixType>& targets)
 {
     // Prepare permutation table for training data shuffle
     size_t trainingSize = inputs.size();
@@ -81,8 +81,8 @@ void NeuralNetwork::train(unsigned int epochs,
             {
                 if(idx >= trainingSize) break;
 
-                input = *inputs[permutaionTable[idx]];
-                target = *targets[permutaionTable[idx]];
+                input = inputs[permutaionTable[idx]];
+                target = targets[permutaionTable[idx]];
 
                 singleInputTrain(input, target);
                 idx += 1;
@@ -130,15 +130,15 @@ void NeuralNetwork::singleInputTrain(const NNMatrixType& input, const NNMatrixTy
     costDerivative = layers_[0]->backpropagate(costDerivative, weightedInputs[0], input);
 }
 
-float NeuralNetwork::test(const std::vector<std::shared_ptr<NNMatrixType>>& inputs, 
-                          const std::vector<std::shared_ptr<NNMatrixType>>& targets) const
+float NeuralNetwork::test(const std::vector<NNMatrixType>& inputs, 
+                          const std::vector<NNMatrixType>& targets) const
 {
     NNMatrixType result;
     unsigned correctPredictions = 0;
     unsigned predictions = inputs.size();
     for(size_t n = 0; n < predictions; ++n)
     {
-        result = feedforward(*inputs[n]);
+        result = feedforward(inputs[n]);
 
         unsigned int predictedLabel = 0;
         float currentValue = result.get(0, 0);
@@ -154,11 +154,11 @@ float NeuralNetwork::test(const std::vector<std::shared_ptr<NNMatrixType>>& inpu
         }
 
         unsigned int expectedLabel = 0;
-        currentValue = targets[n]->get(0, 0);
+        currentValue = targets[n].get(0, 0);
         maxValue = currentValue;
         for(unsigned int i = 0; i < result.getRows(); ++i)
         {
-            currentValue = targets[n]->get(i, 0);
+            currentValue = targets[n].get(i, 0);
             if(currentValue > maxValue)
             {
                 expectedLabel = i;

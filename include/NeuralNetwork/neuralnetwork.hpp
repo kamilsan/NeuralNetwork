@@ -30,12 +30,12 @@ public:
     // The name of the game
     void train(unsigned int epochs, 
                 unsigned int batchSize, 
-                const std::vector<std::shared_ptr<NNMatrixType>>& inputs, 
-                const std::vector<std::shared_ptr<NNMatrixType>>& targets);
+                const std::vector<NNMatrixType>& inputs, 
+                const std::vector<NNMatrixType>& targets);
 
     // Testing nn performance
-    float test(const std::vector<std::shared_ptr<NNMatrixType>>& inputs, 
-               const std::vector<std::shared_ptr<NNMatrixType>>& targets) const;
+    float test(const std::vector<NNMatrixType>& inputs, 
+               const std::vector<NNMatrixType>& targets) const;
 
     // Serialization and deserialization
     void save(const char* filename) const;

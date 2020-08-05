@@ -6,7 +6,7 @@
 
 class MNISTDataLoader
 {
-typedef std::vector<std::shared_ptr<NNMatrixType>> MatrixVec;
+typedef std::vector<NNMatrixType> MatrixVec;
 public:
     static MNISTData loadData(const char* trainingImagesFilename,
                               const char* trainingLabelsFilename,
